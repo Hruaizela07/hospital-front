@@ -1,0 +1,321 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Appointment {
+  appointment_date: DateTime
+  created_at: DateTime
+  doctor: Doctor
+  id: ID!
+  notes: String
+  patient: Patient
+  status: String
+  updated_at: DateTime
+}
+
+input AppointmentFilterInput {
+  doctor_id: ID
+  id: ID
+  patient_id: ID
+  status: String
+}
+
+"""A paginated list of Appointment items."""
+type AppointmentPaginator {
+  """A list of Appointment items."""
+  data: [Appointment!]!
+  """Pagination information about the list of items."""
+  paginatorInfo: PaginatorInfo!
+}
+
+input ChangePasswordInput {
+  password: String!
+  passwordConfirmation: String!
+}
+
+input CreateAppointmentInput {
+  appointment_date: DateTime!
+  doctor_id: ID!
+  notes: String
+  patient_id: ID!
+  status: String
+}
+
+input CreateDepartmentInput {
+  description: String
+  name: String!
+}
+
+input CreateDoctorInput {
+  department_id: ID!
+  email: String!
+  images: Upload
+  password: String!
+  specialization: String!
+  userName: String!
+}
+
+input CreatePatientInput {
+  date_of_birth: DateTime
+  email: String
+  gender: Gender
+  name: String!
+  phone: String
+  symptom: String!
+}
+
+scalar DateTime
+
+type Department {
+  created_at: DateTime
+  description: String
+  doctors: [Doctor!]
+  id: ID!
+  name: String!
+  updated_at: DateTime
+}
+
+input DepartmentFilterInput {
+  description: String
+  id: ID
+  name: String
+}
+
+"""A paginated list of Department items."""
+type DepartmentPaginator {
+  """A list of Department items."""
+  data: [Department!]!
+  """Pagination information about the list of items."""
+  paginatorInfo: PaginatorInfo!
+}
+
+type Doctor {
+  created_at: DateTime
+  department: Department
+  email: String
+  id: ID!
+  imageUrl: String
+  specialization: String
+  updated_at: DateTime
+  userName: String!
+}
+
+input DoctorFilterInput {
+  id: ID
+  userName: String
+}
+
+"""A paginated list of Doctor items."""
+type DoctorPaginator {
+  """A list of Doctor items."""
+  data: [Doctor!]!
+  """Pagination information about the list of items."""
+  paginatorInfo: PaginatorInfo!
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  OTHER
+}
+
+type Mutation {
+  createAppointment(input: CreateAppointmentInput!): Appointment!
+  createDepartment(input: CreateDepartmentInput!): Department!
+  createDoctor(input: CreateDoctorInput!): Doctor!
+  createPatient(input: CreatePatientInput!): Patient!
+  deleteAppointment(id: ID!): Boolean!
+  deleteDepartment(id: ID!): Boolean!
+  deleteDoctor(id: ID!): Boolean!
+  deletePatient(id: ID!): Boolean!
+  login(password: String!, userName: String!): User!
+  logout: Boolean!
+  updateAppointment(id: ID!, input: UpdateAppointmentInput!): Appointment!
+  updateDepartment(id: ID!, input: UpdateDepartmentInput!): Department!
+  updateDoctor(id: ID!, input: UpdateDoctorInput!): Doctor!
+  updatePassword(id: ID!, input: ChangePasswordInput!): Doctor!
+  updatePatient(id: ID!, input: UpdatePatientInput!): Patient!
+}
+
+"""Allows ordering a list of records."""
+input OrderByClause {
+  """The column that is used for ordering."""
+  column: String!
+  """The direction that is used for ordering."""
+  order: SortOrder!
+}
+
+"""
+Aggregate functions when ordering by a relation without specifying a column.
+"""
+enum OrderByRelationAggregateFunction {
+  """Amount of items."""
+  COUNT
+}
+
+"""
+Aggregate functions when ordering by a relation that may specify a column.
+"""
+enum OrderByRelationWithColumnAggregateFunction {
+  """Average."""
+  AVG
+  """Amount of items."""
+  COUNT
+  """Maximum."""
+  MAX
+  """Minimum."""
+  MIN
+  """Sum."""
+  SUM
+}
+
+"""Information about pagination using a fully featured paginator."""
+type PaginatorInfo {
+  """Number of items in the current page."""
+  count: Int!
+  """Index of the current page."""
+  currentPage: Int!
+  """Index of the first item in the current page."""
+  firstItem: Int
+  """Are there more pages after this one?"""
+  hasMorePages: Boolean!
+  """Index of the last item in the current page."""
+  lastItem: Int
+  """Index of the last available page."""
+  lastPage: Int!
+  """Number of items per page."""
+  perPage: Int!
+  """Number of total available items."""
+  total: Int!
+}
+
+type Patient {
+  created_at: DateTime
+  date_of_birth: DateTime
+  email: String
+  gender: Gender
+  id: ID!
+  name: String!
+  phone: String
+  symptom: String
+  updated_at: DateTime
+}
+
+input PatientFilterInput {
+  date_of_birth: DateTime
+  email: String
+  gender: Gender
+  id: ID
+  name: String
+  phone: String
+}
+
+"""A paginated list of Patient items."""
+type PatientPaginator {
+  """A list of Patient items."""
+  data: [Patient!]!
+  """Pagination information about the list of items."""
+  paginatorInfo: PaginatorInfo!
+}
+
+type Query {
+  appointment(id: ID!): Appointment
+  appointments(
+    filter: AppointmentFilterInput
+    """Limits number of fetched items. Maximum allowed value: 100."""
+    first: Int!
+    """The offset from which items are returned."""
+    page: Int
+  ): AppointmentPaginator!
+  department(id: ID!): Department
+  departments(
+    filter: DepartmentFilterInput
+    """Limits number of fetched items. Maximum allowed value: 100."""
+    first: Int!
+    """The offset from which items are returned."""
+    page: Int
+  ): DepartmentPaginator!
+  doctor(id: ID!): Doctor
+  doctors(
+    filter: DoctorFilterInput
+    """Limits number of fetched items. Maximum allowed value: 100."""
+    first: Int!
+    """The offset from which items are returned."""
+    page: Int
+  ): DoctorPaginator!
+  me: User
+  patient(id: ID!): Patient
+  patients(
+    filter: PatientFilterInput
+    """Limits number of fetched items. Maximum allowed value: 100."""
+    first: Int!
+    """The offset from which items are returned."""
+    page: Int
+  ): PatientPaginator!
+}
+
+"""Directions for ordering a list of records."""
+enum SortOrder {
+  """Sort records in ascending order."""
+  ASC
+  """Sort records in descending order."""
+  DESC
+}
+
+"""
+Specify if you want to include or exclude trashed results from a query.
+"""
+enum Trashed {
+  """Only return trashed results."""
+  ONLY
+  """Return both trashed and non-trashed results."""
+  WITH
+  """Only return non-trashed results."""
+  WITHOUT
+}
+
+input UpdateAppointmentInput {
+  appointment_date: DateTime
+  doctor_id: ID
+  notes: String
+  patient_id: ID
+  status: String
+}
+
+input UpdateDepartmentInput {
+  description: String
+  name: String
+}
+
+input UpdateDoctorInput {
+  email: String
+  image: Upload
+  specialization: String
+  userName: String
+}
+
+input UpdatePatientInput {
+  date_of_birth: DateTime
+  email: String
+  gender: Gender
+  name: String
+  phone: String
+  symptom: String
+}
+
+scalar Upload
+
+type User {
+  createdAt: DateTime
+  id: ID!
+  lastLoginAt: DateTime
+  role: UserRole!
+  updatedAt: DateTime
+  userName: String!
+}
+
+enum UserRole {
+  ADMIN
+  DOCTORS
+}
