@@ -7,11 +7,12 @@ import { useLocation, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import z from 'zod'
 import { Button } from '~/components/ui/button'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '~/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { LOGINMUTATION } from '~/graphql/mutation/login-mutation'
 import { ME_QUERY } from '~/graphql/query/me'
-import { storeUser } from '~/lib/auth-user'
+import { getRoleHomePath, storeUser } from '~/lib/auth-user'
+import { safeRedirect } from '~/lib/utils/safe-redirect'
 
 const schema = z.object({
   username: z.string().min(2, 'must be atlest 2 word'),
@@ -67,6 +68,12 @@ export default function Login() {
           },
         })
         storeUser(user)
+        toast.success(`Welcome back, ${user.userName}.`)
+        form.reset()
+
+        const params = new URLSearchParams(location.search)
+        const fallbackPath = getRoleHomePath(user.role)
+        navigate(safeRedirect(params.get('from'), fallbackPath), { replace: true })
       }
     }
     catch (err) {
@@ -74,10 +81,6 @@ export default function Login() {
     }
   }
 
-  if (loading)
-    return 'Submitting...'
-  if (error)
-    return `Submission error! ${error.message}`
   return (
     <div
       className="
@@ -92,23 +95,24 @@ export default function Login() {
         <h1>Welcome Back</h1>
         <p>Login to continue</p>
         <div className="w-full">
+          {error && (
+            <p className="text-sm text-destructive">
+              Invalid username or password
+            </p>
+          )}
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
-              <Field data-invalid>
+              <Field>
                 <FieldLabel htmlFor="username">UserName</FieldLabel>
-                <Input id="username" aria-invalid />
-                <FieldDescription>
-                  This field must be filled out.
-                </FieldDescription>
+                <Input id="username" disabled={loading} {...form.register('username')} />
+                <FieldError errors={[form.formState.errors.username]} />
               </Field>
-              <Field data-invalid>
+              <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input id="password" aria-invalid />
-                <FieldDescription>
-                  This field must be filled out.
-                </FieldDescription>
+                <Input id="password" disabled={loading} {...form.register('password')} />
+                <FieldError errors={[form.formState.errors.password]} />
               </Field>
-              <Button>Login</Button>
+              <Button type="submit" variant="default" disabled={loading}>Login</Button>
             </FieldGroup>
           </form>
         </div>

@@ -50,7 +50,7 @@ input CreateDepartmentInput {
 input CreateDoctorInput {
   department_id: ID!
   email: String!
-  images: Upload
+  image: Upload
   password: String!
   specialization: String!
   userName: String!
@@ -95,7 +95,7 @@ type Doctor {
   department: Department
   email: String
   id: ID!
-  imageUrl: String
+  image: DoctorImage
   specialization: String
   updated_at: DateTime
   userName: String!
@@ -104,6 +104,13 @@ type Doctor {
 input DoctorFilterInput {
   id: ID
   userName: String
+}
+
+type DoctorImage {
+  id: ID!
+  name: String!
+  path: String!
+  url: String!
 }
 
 """A paginated list of Doctor items."""
