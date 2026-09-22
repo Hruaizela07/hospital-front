@@ -1,8 +1,8 @@
-import type { DoctorFormInput, DoctorFormValues } from './schema'
-import type { CreateDoctorInput, CreateDoctorMutation, CreateDoctorMutationVariables, DepartmentsQuery, DepartmentsQueryVariables } from '~/gql/graphql'
+import type { UpdateDoctorFormInput, UpdateDoctorFormValues } from './schema'
+import type { DepartmentsQuery, DepartmentsQueryVariables, DoctorsQuery, UpdateDoctorInput, UpdateDoctorMutation, UpdateDoctorMutationVariables } from '~/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useId, useRef, useState } from 'react'
+import { useId, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '~/components/ui/button'
@@ -10,19 +10,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Field, FieldError, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
-import { CREATE_DOCTOR } from '~/graphql/mutation/create-doctor'
+import { UPDATE_DOCTOR } from '~/graphql/mutation/update-doctor'
 import { DEPARTMENTS_QUERY } from '~/graphql/query/departments'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
-import { doctorSchema } from './schema'
+import { updateDoctorSchema } from './schema'
 
 interface Props {
-  onCreated?: () => void | Promise<void>
+  doctor: DoctorsQuery['doctors']['data'][number]
+  onUpdated?: () => void | Promise<void>
 }
 
-function toInputMutation(values: DoctorFormValues): CreateDoctorInput {
+function toInputMutation(values: UpdateDoctorFormValues): UpdateDoctorInput {
   return {
     email: values.email,
-    password: values.password,
     userName: values.userName,
     specialization: values.specialization,
     image: values.image,
@@ -30,28 +30,37 @@ function toInputMutation(values: DoctorFormValues): CreateDoctorInput {
   }
 }
 
-export default function DoctorsAdd({ onCreated }: Props) {
+export default function DoctorsUpdate({ doctor, onUpdated }: Props) {
   const [open, setOpen] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [fileInputKey, setFileInputKey] = useState(0)
   const id = useId()
-  const form = useForm<DoctorFormInput, unknown, DoctorFormValues>({
-    resolver: zodResolver(doctorSchema),
-    defaultValues: {
-      userName: '',
-      email: '',
-      password: '',
-      specialization: '',
-      department_Id: '',
-    },
+  const defaults: UpdateDoctorFormInput = {
+    id: doctor.id,
+    userName: doctor.userName,
+    email: doctor.email ?? '',
+    specialization: doctor.specialization ?? '',
+    department_Id: doctor.department?.id ?? '',
+    image: undefined,
+  }
+  const form = useForm<UpdateDoctorFormInput, unknown, UpdateDoctorFormValues>({
+    resolver: zodResolver(updateDoctorSchema),
+    defaultValues: defaults,
   })
-  const [doctorAdd, { loading }] = useMutation<CreateDoctorMutation, CreateDoctorMutationVariables>(CREATE_DOCTOR)
+  const resetForm = () => {
+    form.reset(defaults)
+    setFileInputKey(value => value + 1)
+  }
+  const [doctorUpdate, { loading }] = useMutation<UpdateDoctorMutation, UpdateDoctorMutationVariables>(UPDATE_DOCTOR)
   const departments = useQuery<DepartmentsQuery, DepartmentsQueryVariables>(DEPARTMENTS_QUERY, {
     variables: { first: 20, page: 1 },
     skip: !open,
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   })
-  const options = departments.data?.departments.data ?? []
+  const options = [...new Map([
+    ...(doctor.department ? [doctor.department] : []),
+    ...(departments.data?.departments.data ?? []),
+  ].map(item => [item.id, item])).values()]
   const pagination = departments.data?.departments.paginatorInfo
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
@@ -76,11 +85,11 @@ export default function DoctorsAdd({ onCreated }: Props) {
     }
   }
 
-  const onSubmit = async (values: DoctorFormValues) => {
+  const onSubmit = async (values: UpdateDoctorFormValues) => {
     try {
-      const response = await doctorAdd({ variables: { input: toInputMutation(values) } })
-      if (!response.data?.createDoctor) {
-        toast.error('Doctor could not be created. Please try again.')
+      const response = await doctorUpdate({ variables: { id: doctor.id, input: toInputMutation(values) } })
+      if (!response.data?.updateDoctor) {
+        toast.error('Doctor could not be updated. Please try again.')
         return
       }
     }
@@ -88,14 +97,14 @@ export default function DoctorsAdd({ onCreated }: Props) {
       toast.error(getSubmitErrorMessage(error))
       return
     }
-    form.reset()
+    resetForm()
     setOpen(false)
-    toast.success('Doctor created successfully')
+    toast.success('Doctor updated successfully')
     try {
-      await onCreated?.()
+      await onUpdated?.()
     }
     catch {
-      toast.error('Doctor was created, but refreshing failed. Please reload the page.')
+      toast.error('Doctor was updated, but refreshing failed. Please reload the page.')
     }
   }
 
@@ -105,21 +114,20 @@ export default function DoctorsAdd({ onCreated }: Props) {
       onOpenChange={(nextOpen) => {
         if (busy)
           return
-        form.reset()
+        resetForm()
         setOpen(nextOpen)
       }}
     >
-      <DialogTrigger render={<Button disabled={busy} />}>Add Doctor</DialogTrigger>
+      <DialogTrigger render={<Button variant="outline" disabled={busy} />}>Edit</DialogTrigger>
       <DialogContent showCloseButton={!busy}>
         <DialogHeader className="mb-6">
-          <DialogTitle>Add Doctor</DialogTitle>
-          <DialogDescription>Enter the doctor’s details and select their department.</DialogDescription>
+          <DialogTitle>Edit Doctor</DialogTitle>
+          <DialogDescription>Update the doctor’s details and department. Their password will stay unchanged.</DialogDescription>
         </DialogHeader>
         <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             {([
               { name: 'userName', label: 'Name', type: 'text', autoComplete: 'name' },
-              { name: 'password', label: 'Password', type: 'password', autoComplete: 'new-password' },
               { name: 'email', label: 'Email', type: 'email', autoComplete: 'email' },
               { name: 'specialization', label: 'Specialization', type: 'text', autoComplete: 'off' },
             ] as const).map(field => (
@@ -190,7 +198,7 @@ export default function DoctorsAdd({ onCreated }: Props) {
                     </div>
                   )}
                   {!departments.loading && !departments.error && !options.length && (
-                    <p className="text-sm text-muted-foreground">Create a department before adding a doctor.</p>
+                    <p className="text-sm text-muted-foreground">Create a department before updating this doctor.</p>
                   )}
                   {pagination && pagination.currentPage < pagination.lastPage && (
                     <Button type="button" variant="outline" disabled={busy || departments.loading} onClick={loadMoreDepartments}>Load more departments</Button>
@@ -201,15 +209,17 @@ export default function DoctorsAdd({ onCreated }: Props) {
             <Controller
               control={form.control}
               name="image"
-              render={({ field: { onChange, onBlur } }) => (
+              render={({ field: { onChange, onBlur, ref } }) => (
                 <Field data-invalid={!!errors.image}>
-                  <FieldLabel htmlFor={`${id}-image`}>Image (optional)</FieldLabel>
+                  <FieldLabel htmlFor={`${id}-image`}>Replace image (optional)</FieldLabel>
+                  <p className="text-sm text-muted-foreground">Leave empty to keep the current image.</p>
                   <Input
-                    id="img"
+                    id={`${id}-image`}
                     type="file"
                     accept="image/*"
                     disabled={busy}
-                    ref={fileInputRef}
+                    key={fileInputKey}
+                    ref={ref}
                     onBlur={onBlur}
                     onChange={event => onChange(event.target.files?.[0])}
                     aria-invalid={!!errors.image}
@@ -225,13 +235,13 @@ export default function DoctorsAdd({ onCreated }: Props) {
                 variant="outline"
                 disabled={busy}
                 onClick={() => {
-                  form.reset()
+                  resetForm()
                   setOpen(false)
                 }}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy}>{busy ? 'Creating...' : 'Create Doctor'}</Button>
+              <Button type="submit" disabled={busy}>{busy ? 'Saving...' : 'Save Changes'}</Button>
             </div>
           </FieldGroup>
         </form>

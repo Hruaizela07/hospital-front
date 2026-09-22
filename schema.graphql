@@ -296,6 +296,7 @@ input UpdateDepartmentInput {
 }
 
 input UpdateDoctorInput {
+  department_id: ID!
   email: String
   image: Upload
   specialization: String
