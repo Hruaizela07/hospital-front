@@ -16,6 +16,7 @@ import { Toaster } from 'sonner'
 import { TooltipProvider } from '~/components/ui/tooltip'
 import { createApolloClient } from '~/lib/graphql-client'
 import './app.css'
+import 'lenis/dist/lenis.css'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },

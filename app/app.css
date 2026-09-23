@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -142,4 +143,16 @@ input[type="password"]::-ms-reveal {
 
 input[type="password"]::-webkit-contacts-auto-fill-button {
   filter: invert(1);
+}
+mux-player {
+  --controls: none;
+  --media-object-fit: cover;
+
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+mux-player::part(gesture-layer) {
+  display: none;
 }
