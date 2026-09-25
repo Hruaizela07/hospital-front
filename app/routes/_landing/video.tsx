@@ -9,6 +9,8 @@ export default function Video() {
       muted
       loop
       nohotkeys
+      minResolution="1080p"
+      maxResolution="1080p"
     />
   )
 }
