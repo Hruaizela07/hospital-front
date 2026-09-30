@@ -1,11 +1,13 @@
 import type { ComponentType } from 'react'
 import { useApolloClient, useQuery } from '@apollo/client'
-import { Building, HeartPlus } from 'lucide-react'
+import { Building, HeartPlus, LogOut, Notebook, User } from 'lucide-react'
 import { useState } from 'react'
-import { NavLink } from 'react-router'
-import { Sidebar, SidebarContent, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '~/components/ui/sidebar'
+import { NavLink, useNavigate } from 'react-router'
+import { Button } from '~/components/ui/button'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '~/components/ui/sidebar'
 import { UserRole } from '~/gql/graphql'
 import { ME_QUERY } from '~/graphql/query/me'
+import useLogout from '~/hooks/use-logout'
 import { readStoredUser } from '~/lib/auth-user'
 
 interface MeQueriesData {
@@ -24,20 +26,25 @@ interface menuItem {
 }
 
 const admin = [UserRole.Admin]
+const Admindoctor = [UserRole.Admin, UserRole.Doctors]
 
 const menu: menuItem[] = [
   { icon: HeartPlus, title: 'Doctors', url: '/doctors', roles: admin },
   { icon: Building, title: 'Departments', url: '/departments', roles: admin },
+  { icon: User, title: 'Patients', url: '/patients', roles: Admindoctor },
+  { icon: Notebook, title: 'Appointments', url: '/appointments', roles: Admindoctor },
 ]
 
 export default function AdminSidebarMenu() {
-  // const navigate = useNavigate()
+  const navigate = useNavigate()
   const apolloClient = useApolloClient()
   const { isMobile, setOpenMobile, setOpen } = useSidebar()
   const [storedUser] = useState<MeQueriesData['me']>(() => readStoredUser())
   const cachedUser = apolloClient.readQuery<MeQueriesData>({
     query: ME_QUERY,
   })?.me
+
+  const { logout, error, loading } = useLogout()
 
   const { data } = useQuery<MeQueriesData>(ME_QUERY, {
     fetchPolicy: 'cache-first',
@@ -50,6 +57,18 @@ export default function AdminSidebarMenu() {
     if (isMobile) {
       setOpen(false)
       setOpenMobile(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      const response = await logout()
+      if (response.data?.logout) {
+        navigate('/login')
+      }
+    }
+    catch (logoutError) {
+      console.error(logoutError)
     }
   }
 
@@ -80,6 +99,27 @@ export default function AdminSidebarMenu() {
             })}
           </SidebarMenu>
         </SidebarGroupContent>
+        <SidebarFooter>
+          {error && (
+            <p className="px-2 text-sm text-destructive">{error.message}</p>
+          )}
+          <Button
+            onClick={handleLogout}
+            isLoading={loading}
+            variant="destructive"
+            className="
+              w-full border bg-red-600/70 text-white
+              group-data-[collapsible=icon]:size-8
+              group-data-[collapsible=icon]:p-0
+              hover:cursor-pointer hover:bg-red-400
+            "
+          >
+            <LogOut className="" />
+            <span className="group-data-[collapsible=icon]:hidden">
+              Logout
+            </span>
+          </Button>
+        </SidebarFooter>
       </SidebarContent>
     </Sidebar>
   )
