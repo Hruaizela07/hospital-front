@@ -33,6 +33,7 @@ const menu: menuItem[] = [
   { icon: Building, title: 'Departments', url: '/departments', roles: admin },
   { icon: User, title: 'Patients', url: '/patients', roles: Admindoctor },
   { icon: Notebook, title: 'Appointments', url: '/appointments', roles: Admindoctor },
+  { icon: Notebook, title: 'Duty', url: '/doctorDuty', roles: Admindoctor },
 ]
 
 export default function AdminSidebarMenu() {

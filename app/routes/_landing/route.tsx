@@ -4,21 +4,21 @@ import { ReactLenis } from 'lenis/react'
 import { useRef } from 'react'
 import Video from './video'
 
-gsap.registerPlugin(useGSAP, ScrollTrigger)
+// gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 export default function Landing() {
   const lenisRef = useRef(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
-  useGSAP(() => {
-
-  })
+  // useGSAP(() => {
+  //   const tl = gsap.timeline()
+  // })
 
   return (
     <ReactLenis root options={{ anchors: true }} ref={lenisRef}>
       <div className="h-lvh w-full">
-        <div className="">
-          <h1 className="">0</h1>
+        <div className="loader">
+          <h1 className="counter">0</h1>
         </div>
         <div className="min-h-screen" ref={mainRef}>
           <section className="
