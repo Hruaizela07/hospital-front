@@ -63,6 +63,12 @@ input CreateDoctorInput {
   userName: String!
 }
 
+input CreateDoctorLeaveInput {
+  doctor_id: ID!
+  end_date: DateTime!
+  start_date: DateTime!
+}
+
 input CreatePatientInput {
   date_of_birth: DateTime
   email: String
@@ -74,10 +80,10 @@ input CreatePatientInput {
 
 input CreateShiftInput {
   doctor_id: ID!
-  duty_date: String!
-  end_time: String!
+  duty_date: DateTime!
+  end_time: DateTime!
   slot_minutes: Int!
-  start_time: String!
+  start_time: DateTime!
 }
 
 scalar DateTime
@@ -111,6 +117,7 @@ type Doctor {
   email: String
   id: ID!
   image: DoctorImage
+  leave_status: DoctorLeaveStatus!
   specialization: String
   updated_at: DateTime
   userName: String!
@@ -118,11 +125,11 @@ type Doctor {
 
 type DoctorDutyShift {
   doctor: Doctor!
-  duty_date: String!
-  end_time: String!
+  duty_date: DateTime!
+  end_time: DateTime!
   id: ID!
   slot_minutes: Int!
-  start_time: String!
+  start_time: DateTime!
 }
 
 input DoctorFilterInput {
@@ -135,6 +142,32 @@ type DoctorImage {
   name: String!
   path: String!
   url: String!
+}
+
+type DoctorLeave {
+  doctor: Doctor!
+  end_date: DateTime!
+  id: ID!
+  start_date: DateTime!
+}
+
+input DoctorLeaveFilterInput {
+  doctor_id: ID
+  from_date: DateTime
+  to_date: DateTime
+}
+
+"""A paginated list of DoctorLeave items."""
+type DoctorLeavePaginator {
+  """A list of DoctorLeave items."""
+  data: [DoctorLeave!]!
+  """Pagination information about the list of items."""
+  paginatorInfo: PaginatorInfo!
+}
+
+enum DoctorLeaveStatus {
+  NOT_ON_LEAVE
+  ON_LEAVE
 }
 
 """A paginated list of Doctor items."""
@@ -156,11 +189,13 @@ type Mutation {
   createDepartment(input: CreateDepartmentInput!): Department!
   createDoctor(input: CreateDoctorInput!): Doctor!
   createDoctorDutyShift(input: CreateShiftInput!): DoctorDutyShift!
+  createDoctorLeave(input: CreateDoctorLeaveInput!): DoctorLeave!
   createPatient(input: CreatePatientInput!): Patient!
   deleteAppointment(id: ID!): Boolean!
   deleteDepartment(id: ID!): Boolean!
   deleteDoctor(id: ID!): Boolean!
   deleteDoctorDutyShift(id: ID!): Boolean!
+  deleteDoctorLeave(id: ID!): Boolean!
   deletePatient(id: ID!): Boolean!
   login(password: String!, userName: String!): User!
   logout: Boolean!
@@ -168,6 +203,7 @@ type Mutation {
   updateDepartment(id: ID!, input: UpdateDepartmentInput!): Department!
   updateDoctor(id: ID!, input: UpdateDoctorInput!): Doctor!
   updateDoctorDutyShift(id: ID!, input: UpdateShiftInput!): DoctorDutyShift!
+  updateDoctorLeave(id: ID!, input: UpdateDoctorLeaveInput!): DoctorLeave!
   updatePassword(id: ID!, input: ChangePasswordInput!): Doctor!
   updatePatient(id: ID!, input: UpdatePatientInput!): Patient!
 }
@@ -271,7 +307,14 @@ type Query {
     page: Int
   ): DepartmentPaginator!
   doctor(id: ID!): Doctor
-  doctorAvailableSlots(date: String!, doctor_id: ID!): [AppointmentSlot!]!
+  doctorAvailableSlots(date: DateTime!, doctor_id: ID!): [AppointmentSlot!]!
+  doctorLeaves(
+    filter: DoctorLeaveFilterInput!
+    """Limits number of fetched items. Maximum allowed value: 100."""
+    first: Int!
+    """The offset from which items are returned."""
+    page: Int
+  ): DoctorLeavePaginator!
   doctors(
     filter: DoctorFilterInput
     """Limits number of fetched items. Maximum allowed value: 100."""
@@ -331,6 +374,11 @@ input UpdateDoctorInput {
   userName: String
 }
 
+input UpdateDoctorLeaveInput {
+  end_date: DateTime
+  start_date: DateTime
+}
+
 input UpdatePatientInput {
   date_of_birth: DateTime
   email: String
@@ -342,10 +390,10 @@ input UpdatePatientInput {
 
 input UpdateShiftInput {
   doctor_id: ID
-  duty_date: String
-  end_time: String
+  duty_date: DateTime
+  end_time: DateTime
   slot_minutes: Int
-  start_time: String
+  start_time: DateTime
 }
 
 scalar Upload

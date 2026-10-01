@@ -16,7 +16,7 @@ interface Props {
   onUpdated?: () => void | Promise<void>
 }
 
-function DoctorPhoto({ url, name }: { url?: string, name: string }) {
+export function DoctorPhoto({ url, name }: { url?: string, name: string }) {
   const [failedUrl, setFailedUrl] = useState<string>()
 
   return (

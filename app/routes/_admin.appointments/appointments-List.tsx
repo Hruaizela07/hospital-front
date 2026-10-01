@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button } from '~/components/ui/button'
 import useGetAppointments from '~/hooks/use-get-appointments'
 
 const dateTimeSeparator = /[T ]/
@@ -60,6 +61,16 @@ export default function AppointmentsList() {
             </article>
           ))}
         </div>
+      )}
+      {(lastPage > 1 || page > 1) && (
+        <nav
+          aria-label="Patient pagination"
+          className="flex items-center justify-center gap-4"
+        >
+          <Button type="button" variant="outline" disabled={loading || page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
+          <span className="text-sm">{`Page ${page} of ${Math.max(page, lastPage)}`}</span>
+          <Button type="button" variant="outline" disabled={loading || !!error || page >= lastPage} onClick={() => setPage(page + 1)}>Next</Button>
+        </nav>
       )}
     </div>
   )
