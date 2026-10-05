@@ -2,6 +2,7 @@ import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ReactLenis } from 'lenis/react'
 import { useRef } from 'react'
+import { useNavigate } from 'react-router'
 import Video from './video'
 
 // gsap.registerPlugin(useGSAP, ScrollTrigger)
@@ -9,7 +10,7 @@ import Video from './video'
 export default function Landing() {
   const lenisRef = useRef(null)
   const mainRef = useRef<HTMLDivElement>(null)
-
+  const navigate = useNavigate()
   // useGSAP(() => {
   //   const tl = gsap.timeline()
   // })
@@ -17,9 +18,9 @@ export default function Landing() {
   return (
     <ReactLenis root options={{ anchors: true }} ref={lenisRef}>
       <div className="h-lvh w-full">
-        <div className="loader">
+        {/* <div className="loader">
           <h1 className="counter">0</h1>
-        </div>
+        </div> */}
         <div className="min-h-screen" ref={mainRef}>
           <section className="
             relative flex h-screen w-full flex-col items-center justify-center
@@ -41,6 +42,12 @@ export default function Landing() {
             flex h-screen w-full items-center justify-center bg-red-400
           "
           >
+            <div
+              onClick={() => navigate('/landing-loader')}
+              className="border p-7"
+            >
+              CLick
+            </div>
             <div>box 2</div>
           </section>
         </div>
