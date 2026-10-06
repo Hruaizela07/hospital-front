@@ -31,9 +31,19 @@ type AppointmentPaginator {
 }
 
 type AppointmentSlot {
+  doctor: Doctor
+  doctor_id: ID!
   duration_minutes: Int!
   end: DateTime!
   start: DateTime!
+}
+
+"""A paginated list of AppointmentSlot items."""
+type AppointmentSlotPaginator {
+  """A list of AppointmentSlot items."""
+  data: [AppointmentSlot!]!
+  """Pagination information about the list of items."""
+  paginatorInfo: PaginatorInfo!
 }
 
 input ChangePasswordInput {
@@ -44,6 +54,7 @@ input ChangePasswordInput {
 input CreateAppointmentInput {
   appointment_date: DateTime!
   doctor_id: ID!
+  duration_minutes: Int!
   notes: String
   patient_id: ID!
   status: String
@@ -65,8 +76,8 @@ input CreateDoctorInput {
 
 input CreateDoctorLeaveInput {
   doctor_id: ID!
-  end_date: DateTime!
-  start_date: DateTime!
+  end_date: Date!
+  start_date: Date!
 }
 
 input CreatePatientInput {
@@ -80,11 +91,12 @@ input CreatePatientInput {
 
 input CreateShiftInput {
   doctor_id: ID!
-  duty_date: DateTime!
-  end_time: DateTime!
-  slot_minutes: Int!
-  start_time: DateTime!
+  duty_date: Date!
+  end_time: String!
+  start_time: String!
 }
+
+scalar Date
 
 scalar DateTime
 
@@ -123,13 +135,18 @@ type Doctor {
   userName: String!
 }
 
+input DoctorAvailableSlotFilterInput {
+  data: Date!
+  doctor_id: ID!
+  duration_minutes: Int!
+}
+
 type DoctorDutyShift {
   doctor: Doctor!
-  duty_date: DateTime!
-  end_time: DateTime!
+  duty_date: Date!
+  end_time: String!
   id: ID!
-  slot_minutes: Int!
-  start_time: DateTime!
+  start_time: String!
 }
 
 input DoctorFilterInput {
@@ -146,15 +163,15 @@ type DoctorImage {
 
 type DoctorLeave {
   doctor: Doctor!
-  end_date: DateTime!
+  end_date: Date!
   id: ID!
-  start_date: DateTime!
+  start_date: Date!
 }
 
 input DoctorLeaveFilterInput {
   doctor_id: ID
-  from_date: DateTime
-  to_date: DateTime
+  from_date: Date
+  to_date: Date
 }
 
 """A paginated list of DoctorLeave items."""
@@ -307,7 +324,13 @@ type Query {
     page: Int
   ): DepartmentPaginator!
   doctor(id: ID!): Doctor
-  doctorAvailableSlots(date: DateTime!, doctor_id: ID!): [AppointmentSlot!]!
+  doctorAvailableSlots(
+    filter: DoctorAvailableSlotFilterInput
+    """Limits number of fetched items. Maximum allowed value: 100."""
+    first: Int!
+    """The offset from which items are returned."""
+    page: Int
+  ): AppointmentSlotPaginator!
   doctorLeaves(
     filter: DoctorLeaveFilterInput!
     """Limits number of fetched items. Maximum allowed value: 100."""
@@ -356,6 +379,7 @@ enum Trashed {
 input UpdateAppointmentInput {
   appointment_date: DateTime
   doctor_id: ID
+  duration_minutes: Int
   notes: String
   patient_id: ID
   status: String
@@ -375,8 +399,8 @@ input UpdateDoctorInput {
 }
 
 input UpdateDoctorLeaveInput {
-  end_date: DateTime
-  start_date: DateTime
+  end_date: Date
+  start_date: Date
 }
 
 input UpdatePatientInput {
@@ -390,10 +414,9 @@ input UpdatePatientInput {
 
 input UpdateShiftInput {
   doctor_id: ID
-  duty_date: DateTime
-  end_time: DateTime
-  slot_minutes: Int
-  start_time: DateTime
+  duty_date: Date
+  end_time: String
+  start_time: String
 }
 
 scalar Upload

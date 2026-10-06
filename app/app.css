@@ -52,11 +52,11 @@
 }
 
 :root {
-  --base-100: oklch(1 0 0);
-  --base-200: oklch(0.922 0 0);
-  --base-300: oklch(0.708 0 0);
-  --base-400: oklch(0.556 0 0);
-  --base-500: oklch(0.5 0 0);
+  --base-100: #f5e1bf;
+  --base-200: #c49241;
+  --base-300: #f75828;
+  --base-400: #e01b22;
+  --base-500: #17100a;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

@@ -21,7 +21,6 @@ export const CREATE_DOCTOR_DUTY_SHIFT = gql(`
     duty_date
     start_time
     end_time
-    slot_minutes
   }
 }   
     `)
