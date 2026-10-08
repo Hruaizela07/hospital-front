@@ -5,7 +5,7 @@ import { Button } from '~/components/ui/button'
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
 import { DoctorPhoto } from '../_admin.doctors/doctors-list'
 
-export type AppointmentSlot = DoctorAvailableSlotsQuery['doctorAvailableSlots']['data'][number]
+export type AppointmentSlot = DoctorAvailableSlotsQuery['doctorAvailableSlots'][number]
 
 interface Props {
   error?: ApolloError

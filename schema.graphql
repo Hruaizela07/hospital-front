@@ -38,14 +38,6 @@ type AppointmentSlot {
   start: DateTime!
 }
 
-"""A paginated list of AppointmentSlot items."""
-type AppointmentSlotPaginator {
-  """A list of AppointmentSlot items."""
-  data: [AppointmentSlot!]!
-  """Pagination information about the list of items."""
-  paginatorInfo: PaginatorInfo!
-}
-
 input ChangePasswordInput {
   password: String!
   passwordConfirmation: String!
@@ -78,6 +70,14 @@ input CreateDoctorLeaveInput {
   doctor_id: ID!
   end_date: Date!
   start_date: Date!
+}
+
+input CreateMonthlyShiftInput {
+  doctor_id: ID!
+  end_time: String!
+  month: Int!
+  start_time: String!
+  year: Int!
 }
 
 input CreatePatientInput {
@@ -135,18 +135,28 @@ type Doctor {
   userName: String!
 }
 
-input DoctorAvailableSlotFilterInput {
-  data: Date!
-  doctor_id: ID!
-  duration_minutes: Int!
-}
-
 type DoctorDutyShift {
   doctor: Doctor!
   duty_date: Date!
   end_time: String!
   id: ID!
   start_time: String!
+}
+
+input DoctorDutyShiftFilterInput {
+  doctor_id: ID
+  duty_date: Date
+  from_date: Date
+  id: ID
+  to_date: Date
+}
+
+"""A paginated list of DoctorDutyShift items."""
+type DoctorDutyShiftPaginator {
+  """A list of DoctorDutyShift items."""
+  data: [DoctorDutyShift!]!
+  """Pagination information about the list of items."""
+  paginatorInfo: PaginatorInfo!
 }
 
 input DoctorFilterInput {
@@ -206,6 +216,7 @@ type Mutation {
   createDepartment(input: CreateDepartmentInput!): Department!
   createDoctor(input: CreateDoctorInput!): Doctor!
   createDoctorDutyShift(input: CreateShiftInput!): DoctorDutyShift!
+  createDoctorDutyShiftsForMonth(input: CreateMonthlyShiftInput!): [DoctorDutyShift!]!
   createDoctorLeave(input: CreateDoctorLeaveInput!): DoctorLeave!
   createPatient(input: CreatePatientInput!): Patient!
   deleteAppointment(id: ID!): Boolean!
@@ -324,13 +335,14 @@ type Query {
     page: Int
   ): DepartmentPaginator!
   doctor(id: ID!): Doctor
-  doctorAvailableSlots(
-    filter: DoctorAvailableSlotFilterInput
+  doctorAvailableSlots(date: Date!, doctor_id: ID!, duration_minutes: Int!): [AppointmentSlot!]!
+  doctorDutyShifts(
+    filter: DoctorDutyShiftFilterInput
     """Limits number of fetched items. Maximum allowed value: 100."""
     first: Int!
     """The offset from which items are returned."""
     page: Int
-  ): AppointmentSlotPaginator!
+  ): DoctorDutyShiftPaginator!
   doctorLeaves(
     filter: DoctorLeaveFilterInput!
     """Limits number of fetched items. Maximum allowed value: 100."""

@@ -38,13 +38,9 @@ export default function DoctorAvailableSlots() {
     }
 
     return {
-      filter: {
-        data: date,
-        doctor_id: doctorId,
-        duration_minutes: duration,
-      },
-      first: 12,
-      page: 1,
+      date,
+      doctor_id: doctorId,
+      duration_minutes: duration,
     }
   }, [date, doctorId, durationMinutes])
 

@@ -11,8 +11,7 @@ export default function useGetDoctorAvailableSlots(variables?: DoctorAvailableSl
   })
 
   return {
-    slots: data?.doctorAvailableSlots.data ?? [],
-    pagination: data?.doctorAvailableSlots.paginatorInfo,
+    slots: data?.doctorAvailableSlots ?? [],
     loading,
     error,
     refetch,

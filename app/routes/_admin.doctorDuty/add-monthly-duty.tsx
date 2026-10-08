@@ -1,53 +1,59 @@
-import type { doctorDutyAddForm, doctorDutyAddInput } from './schema'
-import type { CreateDoctorDutyShiftMutation, CreateDoctorDutyShiftMutationVariables, DoctorsQuery, DoctorsQueryVariables } from '~/gql/graphql'
+import type { monthlyDutyAddForm, monthlyDutyAddInput } from './schema'
+import type { CreateDoctorDutyShiftsForMonthMutation, CreateDoctorDutyShiftsForMonthMutationVariables, DoctorsQuery, DoctorsQueryVariables } from '~/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { format, isValid, parse } from 'date-fns'
-import { de } from 'date-fns/locale'
-import { CalendarIcon } from 'lucide-react'
 import { useId, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '~/components/ui/button'
 import { Calendar } from '~/components/ui/calendar'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
-import { CREATE_DOCTOR_DUTY_SHIFT } from '~/graphql/mutation/create-doctor-duty-shift'
+import { DOCTOR_DUTY_SHIFT_FOR_MONTH } from '~/graphql/mutation/create-doctor-duty-shift-month'
 import { DOCTORS_QUERY } from '~/graphql/query/doctors'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
-import { cn } from '~/lib/utils'
-import { dutySchema } from './schema'
+import { getMonthlyDutyDateFields, monthlyDutySchema } from './schema'
 
 interface Props {
-  onCreated?: (duty: CreateDoctorDutyShiftMutation['createDoctorDutyShift']) => void | Promise<void>
+  onCreated?: (duties: CreateDoctorDutyShiftsForMonthMutation['createDoctorDutyShiftsForMonth']) => void | Promise<void>
 }
 
-function dateFromFormValue(value?: string) {
-  if (!value)
+function dateFromMonthlyDutyFields(month?: unknown, year?: unknown) {
+  const monthNumber = Number(month)
+  const yearNumber = Number(year)
+
+  if (!Number.isInteger(monthNumber) || !Number.isInteger(yearNumber) || monthNumber < 1 || monthNumber > 12) {
     return undefined
+  }
 
-  const date = parse(value, 'yyyy-MM-dd', new Date())
+  // const today = new Date()
 
-  return isValid(date) ? date : undefined
+  // if (today.getMonth() + 1 === monthNumber && today.getFullYear() === yearNumber) {
+  //   return today
+  // }
+
+  return new Date()
 }
 
-export default function AddDuty({ onCreated }: Props) {
+export default function AddMonthlyDuty({ onCreated }: Props) {
   const [open, setOpen] = useState(false)
   const id = useId()
-  const form = useForm<doctorDutyAddInput, unknown, doctorDutyAddForm>({
-    resolver: zodResolver(dutySchema),
+  const today = new Date()
+  const defaultDateFields = getMonthlyDutyDateFields(today)
+  const form = useForm<monthlyDutyAddInput, unknown, monthlyDutyAddForm>({
+    resolver: zodResolver(monthlyDutySchema),
     defaultValues: {
       doctor_id: '',
-      duty_date: '',
       end_time: '',
+      month: String(defaultDateFields.month),
       start_time: '',
+      year: String(defaultDateFields.year),
     },
   })
 
-  const [createDuty, { loading }] = useMutation<CreateDoctorDutyShiftMutation, CreateDoctorDutyShiftMutationVariables>(CREATE_DOCTOR_DUTY_SHIFT)
+  const [createMonthlyDuty, { loading }] = useMutation<CreateDoctorDutyShiftsForMonthMutation, CreateDoctorDutyShiftsForMonthMutationVariables>(DOCTOR_DUTY_SHIFT_FOR_MONTH)
   const doctors = useQuery<DoctorsQuery, DoctorsQueryVariables>(DOCTORS_QUERY, {
     variables: { first: 100, page: 1 },
     skip: !open,
@@ -55,34 +61,45 @@ export default function AddDuty({ onCreated }: Props) {
     notifyOnNetworkStatusChange: true,
   })
   const doctorOptions = doctors.data?.doctors.data ?? []
+  const selectedYear = useWatch({ control: form.control, name: 'year' })
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
 
-  const onSubmit = async (values: doctorDutyAddForm) => {
-    let createdDuty: CreateDoctorDutyShiftMutation['createDoctorDutyShift']
+  const resetForm = () => {
+    form.reset({
+      doctor_id: '',
+      end_time: '',
+      month: String(defaultDateFields.month),
+      start_time: '',
+      year: String(defaultDateFields.year),
+    })
+  }
+
+  const onSubmit = async (values: monthlyDutyAddForm) => {
+    let createdDuties: CreateDoctorDutyShiftsForMonthMutation['createDoctorDutyShiftsForMonth']
 
     try {
-      const response = await createDuty({ variables: { input: values } })
-      if (!response.data?.createDoctorDutyShift) {
-        toast.error('Duty shift could not be created. Please try again.')
+      const response = await createMonthlyDuty({ variables: { input: values } })
+      if (!response.data?.createDoctorDutyShiftsForMonth) {
+        toast.error('Monthly duty schedule could not be created. Please try again.')
         return
       }
-      createdDuty = response.data.createDoctorDutyShift
+      createdDuties = response.data.createDoctorDutyShiftsForMonth
     }
     catch (error) {
       toast.error(getSubmitErrorMessage(error))
       return
     }
 
-    form.reset()
+    resetForm()
     setOpen(false)
-    toast.success('Duty shift created successfully')
+    toast.success('Monthly duty schedule created successfully')
 
     try {
-      await onCreated?.(createdDuty)
+      await onCreated?.(createdDuties)
     }
     catch {
-      toast.error('Duty shift was created, but refreshing failed. Please reload the page.')
+      toast.error('Monthly duty schedule was created, but refreshing failed. Please reload the page.')
     }
   }
 
@@ -92,15 +109,15 @@ export default function AddDuty({ onCreated }: Props) {
       onOpenChange={(nextOpen) => {
         if (busy)
           return
-        form.reset()
+        resetForm()
         setOpen(nextOpen)
       }}
     >
-      <DialogTrigger render={<Button disabled={busy} />}>Add Duty</DialogTrigger>
+      <DialogTrigger render={<Button type="button" variant="outline" disabled={busy} />}>Create Monthly Schedule</DialogTrigger>
       <DialogContent showCloseButton={!busy}>
         <DialogHeader className="mb-6">
-          <DialogTitle>Add Duty Shift</DialogTitle>
-          <DialogDescription>Assign a doctor to a duty date and time window.</DialogDescription>
+          <DialogTitle>Create Monthly Schedule</DialogTitle>
+          <DialogDescription>Assign a doctor to the same duty time across a month.</DialogDescription>
         </DialogHeader>
         <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
@@ -111,7 +128,7 @@ export default function AddDuty({ onCreated }: Props) {
                 <Field data-invalid={!!errors.doctor_id}>
                   <FieldLabel htmlFor={`${id}-doctor`}>Doctor</FieldLabel>
                   <Select
-                    items={doctorOptions.map(doctor => ({ value: doctor.id, label: ` ${doctor.userName} Dept:${doctor.department?.name ?? 'No department'}` }))}
+                    items={doctorOptions.map(doctor => ({ value: doctor.id, label: ` ${doctor.userName} Dept: ${doctor.department?.name ?? 'No Dept'}` }))}
                     value={field.value || null}
                     onValueChange={value => field.onChange(value ?? '')}
                     disabled={busy || doctors.loading || !doctorOptions.length}
@@ -135,9 +152,8 @@ export default function AddDuty({ onCreated }: Props) {
                           <span className="text-gray-600">
                             Dept:
                             {' '}
-                            {doctor.department?.name ?? ''}
+                            {doctor.department?.name}
                           </span>
-                          {' '}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -162,51 +178,43 @@ export default function AddDuty({ onCreated }: Props) {
                     </div>
                   )}
                   {!doctors.loading && !doctors.error && !doctorOptions.length && (
-                    <p className="text-sm text-muted-foreground">Create a doctor before adding a duty shift.</p>
+                    <p className="text-sm text-muted-foreground">Create a doctor before adding a duty schedule.</p>
                   )}
                 </Field>
               )}
             />
             <Controller
               control={form.control}
-              name="duty_date"
+              name="month"
               render={({ field }) => {
-                const selectedDate = dateFromFormValue(field.value)
+                const selectedDate = dateFromMonthlyDutyFields(field.value, selectedYear)
+                const dateErrorId = `${id}-schedule-date-error`
 
                 return (
-                  <Field data-invalid={!!errors.duty_date}>
-                    <FieldLabel htmlFor={`${id}-duty_date`}>Duty Date</FieldLabel>
-                    <Popover>
-                      <PopoverTrigger
-                        render={(
-                          <Button
-                            id={`${id}-duty_date`}
-                            type="button"
-                            variant="outline"
-                            disabled={busy}
-                            aria-invalid={!!errors.duty_date}
-                            aria-describedby={errors.duty_date ? `${id}-duty_date-error` : undefined}
-                            className={cn(
-                              'w-full justify-start text-left font-normal',
-                              !field.value && 'text-muted-foreground',
-                            )}
-                          />
-                        )}
-                      >
-                        <CalendarIcon className="size-4" />
-                        {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={(date) => {
-                            field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FieldError id={`${id}-duty_date-error`} errors={[errors.duty_date]} />
+                  <Field data-invalid={!!errors.month || !!errors.year}>
+                    <FieldLabel htmlFor={`${id}-schedule-date`}>Schedule Month</FieldLabel>
+                    <Calendar
+                      id={`${id}-schedule-date`}
+                      mode="single"
+                      captionLayout="dropdown"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        if (!date)
+                          return
+
+                        const dateFields = getMonthlyDutyDateFields(date)
+                        field.onChange(String(dateFields.month))
+                        form.setValue('year', String(dateFields.year), {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }}
+                      disabled={busy}
+                      aria-invalid={!!errors.month || !!errors.year}
+                      aria-describedby={errors.month || errors.year ? dateErrorId : undefined}
+                      className="rounded-lg border"
+                    />
+                    <FieldError id={dateErrorId} errors={[errors.month, errors.year]} />
                   </Field>
                 )
               }}
@@ -235,14 +243,14 @@ export default function AddDuty({ onCreated }: Props) {
                 variant="outline"
                 disabled={busy}
                 onClick={() => {
-                  form.reset()
+                  resetForm()
                   setOpen(false)
                 }}
               >
                 Cancel
               </Button>
               <Button type="submit" disabled={busy || doctors.loading || !doctorOptions.length}>
-                {busy ? 'Creating...' : 'Create Duty'}
+                {busy ? 'Creating...' : 'Create Schedule'}
               </Button>
             </div>
           </FieldGroup>

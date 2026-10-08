@@ -18,6 +18,24 @@ export const dutySchema = z.object({
 export type doctorDutyAddForm = z.infer<typeof dutySchema>
 export type doctorDutyAddInput = z.input<typeof dutySchema>
 
+export const monthlyDutySchema = z.object({
+  doctor_id: z.string().min(1, 'Doctor is required'),
+  month: z.coerce.number().int().min(1, 'Month is required').max(12, 'Month is invalid'),
+  year: z.coerce.number().int().min(2000, 'Year is required'),
+  start_time: dutyTimeSchema,
+  end_time: dutyTimeSchema,
+})
+
+export type monthlyDutyAddForm = z.infer<typeof monthlyDutySchema>
+export type monthlyDutyAddInput = z.input<typeof monthlyDutySchema>
+
+export function getMonthlyDutyDateFields(date: Date) {
+  return {
+    month: date.getMonth() + 1,
+    year: date.getFullYear(),
+  }
+}
+
 export const updateDutySchema = z.object({
   id: z.string().min(1, 'Duty shift is required'),
   doctor_id: z.string().min(1, 'Doctor is required').optional(),

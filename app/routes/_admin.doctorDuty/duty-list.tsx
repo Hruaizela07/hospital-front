@@ -1,21 +1,23 @@
 import type { ApolloError } from '@apollo/client'
-import type { UpdateDoctorDutyShiftMutation } from '~/gql/graphql'
-import { CalendarDays, Clock } from 'lucide-react'
+import type { DoctorDutyShiftsQuery, UpdateDoctorDutyShiftMutation } from '~/gql/graphql'
 import { Button } from '~/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table'
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
-import { DoctorPhoto } from '../_admin.doctors/doctors-list'
 import DutyDelete from './duty-delete'
+import { groupDutiesByWeek } from './duty-week-groups'
 import UpdateDuty from './update-duty'
 
-export type DoctorDuty = UpdateDoctorDutyShiftMutation['updateDoctorDutyShift']
+export type DoctorDuty = DoctorDutyShiftsQuery['doctorDutyShifts']['data'][number]
 
 interface Props {
   duties: DoctorDuty[]
   error?: ApolloError
   loading?: boolean
+  page?: number
+  onPageChange: (page: number) => void
   onDeleted: (id: string) => void | Promise<void>
   onRetry?: () => void
-  onUpdated: (duty: DoctorDuty) => void | Promise<void>
+  onUpdated: (duty: UpdateDoctorDutyShiftMutation['updateDoctorDutyShift']) => void | Promise<void>
 }
 
 function dutyLabel(duty: DoctorDuty) {
@@ -23,6 +25,8 @@ function dutyLabel(duty: DoctorDuty) {
 }
 
 export default function DutyList({ duties, loading = false, error, onRetry, onUpdated, onDeleted }: Props) {
+  const weekGroups = groupDutiesByWeek(duties)
+
   return (
     <div className="size-full min-h-120 space-y-6" aria-busy={loading}>
 
@@ -42,62 +46,57 @@ export default function DutyList({ duties, loading = false, error, onRetry, onUp
           : duties.length === 0
             ? (
                 <p role="status" className="text-sm text-muted-foreground">
-                  No duty shifts loaded yet. Add a duty shift to see it here. A backend list query is needed to show saved shifts after refresh.
+                  No duty shifts loaded yet. Add a duty shift or monthly schedule to see it here.
                 </p>
               )
             : (
-                <div className="
-                  grid w-full grid-cols-1 gap-6
-                  sm:grid-cols-2
-                  lg:grid-cols-3
-                  xl:grid-cols-4
-                "
-                >
-                  {duties.map(duty => (
-                    <article key={duty.id} className="rounded-lg border p-4">
-                      <div className="space-y-4">
-                        <div>
-                          <DoctorPhoto url={duty.doctor.image?.path} name={duty.doctor.userName} />
-                          <h2 className="text-lg font-semibold">{duty.doctor.userName}</h2>
-                          <p className="text-sm text-muted-foreground">
-                            {duty.doctor.department?.name || 'No department assigned'}
-                          </p>
-                        </div>
-                        <dl className="space-y-3 text-sm">
-                          <div className="flex items-start gap-2">
-                            <CalendarDays
-                              aria-hidden="true"
-                              className="mt-0.5 size-4 text-muted-foreground"
-                            />
-                            <div>
-                              <dt className="text-muted-foreground">Duty Date</dt>
-                              <dd>{duty.duty_date}</dd>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Clock
-                              aria-hidden="true"
-                              className="mt-0.5 size-4 text-muted-foreground"
-                            />
-                            <div>
-                              <dt className="text-muted-foreground">Time</dt>
-                              <dd>
-                                {duty.start_time}
-                                {' - '}
-                                {duty.end_time}
-                              </dd>
-                            </div>
-                          </div>
-                        </dl>
-                        <div className="flex gap-2">
-                          <UpdateDuty duty={duty} onUpdated={onUpdated} />
-                          <DutyDelete
-                            duty={{ id: duty.id, label: dutyLabel(duty) }}
-                            onDeleted={() => onDeleted(duty.id)}
-                          />
-                        </div>
+                <div className="space-y-6">
+                  {weekGroups.map(group => (
+                    <section key={group.key} className="space-y-3">
+                      <h2 className="text-lg font-semibold">
+                        Week:
+                        {' '}
+                        {group.label}
+                      </h2>
+                      <div className="rounded-lg border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Doctor</TableHead>
+                              <TableHead>Department</TableHead>
+                              <TableHead>Specialization</TableHead>
+                              <TableHead>Time</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {group.duties.map(duty => (
+                              <TableRow key={duty.id}>
+                                <TableCell>{duty.duty_date}</TableCell>
+                                <TableCell className="font-medium">{duty.doctor.userName}</TableCell>
+                                <TableCell>{duty.doctor.department?.name || 'No department assigned'}</TableCell>
+                                <TableCell>{duty.doctor.specialization || 'Not provided'}</TableCell>
+                                <TableCell>
+                                  {duty.start_time}
+                                  {' - '}
+                                  {duty.end_time}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex justify-end gap-2">
+                                    <UpdateDuty duty={duty} onUpdated={onUpdated} />
+                                    <DutyDelete
+                                      duty={{ id: duty.id, label: dutyLabel(duty) }}
+                                      onDeleted={() => onDeleted(duty.id)}
+                                    />
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
-                    </article>
+                    </section>
                   ))}
                 </div>
               )}
