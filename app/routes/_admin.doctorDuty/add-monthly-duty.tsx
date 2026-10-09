@@ -28,12 +28,6 @@ function dateFromMonthlyDutyFields(month?: unknown, year?: unknown) {
     return undefined
   }
 
-  // const today = new Date()
-
-  // if (today.getMonth() + 1 === monthNumber && today.getFullYear() === yearNumber) {
-  //   return today
-  // }
-
   return new Date()
 }
 
@@ -42,6 +36,17 @@ export default function AddMonthlyDuty({ onCreated }: Props) {
   const id = useId()
   const today = new Date()
   const defaultDateFields = getMonthlyDutyDateFields(today)
+  const [departments, setDepartments] = useState([])
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState('')
+  const [dutyDate, setDutyDate] = useState('')
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
+
+  const selectedDepartment = departments.find(department => department.id === selectedDepartmentId)
+  const doctorForDepartment = selectedDepartment?.doctors ?? []
+
+  // const {} = useQuery<>()
+
   const form = useForm<monthlyDutyAddInput, unknown, monthlyDutyAddForm>({
     resolver: zodResolver(monthlyDutySchema),
     defaultValues: {

@@ -74,10 +74,11 @@ input CreateDoctorLeaveInput {
 
 input CreateMonthlyShiftInput {
   doctor_id: ID!
+  duty_date: Date
   end_time: String!
-  month: Int!
+  month: Int
   start_time: String!
-  year: Int!
+  year: Int
 }
 
 input CreatePatientInput {
@@ -115,6 +116,16 @@ input DepartmentFilterInput {
   name: String
 }
 
+type DepartmentMonthlyDutyShift {
+  department: Department!
+  doctor: Doctor!
+  end_time: String!
+  from_date: Date!
+  shift_count: Int!
+  start_time: String!
+  to_date: Date!
+}
+
 """A paginated list of Department items."""
 type DepartmentPaginator {
   """A list of Department items."""
@@ -148,6 +159,7 @@ input DoctorDutyShiftFilterInput {
   duty_date: Date
   from_date: Date
   id: ID
+  keyword: String
   to_date: Date
 }
 
@@ -327,6 +339,7 @@ type Query {
     page: Int
   ): AppointmentPaginator!
   department(id: ID!): Department
+  departmentMonthlyDutyShifts(department_id: ID!, month: Int!, year: Int!): [DepartmentMonthlyDutyShift!]!
   departments(
     filter: DepartmentFilterInput
     """Limits number of fetched items. Maximum allowed value: 100."""
