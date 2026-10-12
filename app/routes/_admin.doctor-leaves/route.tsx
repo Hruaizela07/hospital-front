@@ -1,5 +1,7 @@
+import DoctorLeavesList from './doctor-leaves-list'
+
 export default function DoctorLeaves() {
   return (
-    <div>DoctorLeaves</div>
+    <div><DoctorLeavesList /></div>
   )
 }

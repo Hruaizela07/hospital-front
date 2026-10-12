@@ -16,6 +16,8 @@ mutation updateDoctor($id: ID!, $input: UpdateDoctorInput!) {
     }
     email
     specialization
+    status
+    leave_status
     created_at
     updated_at
   }

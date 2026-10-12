@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~
 import { UPDATE_DOCTOR } from '~/graphql/mutation/update-doctor'
 import { DEPARTMENTS_QUERY } from '~/graphql/query/departments'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
-import { updateDoctorSchema } from './schema'
+import { DOCTOR_LEAVE_STATUS_OPTIONS, DOCTOR_STATUS_OPTIONS, updateDoctorSchema } from './schema'
 
 interface Props {
   doctor: DoctorsQuery['doctors']['data'][number]
@@ -25,6 +25,7 @@ function toInputMutation(values: UpdateDoctorFormValues): UpdateDoctorInput {
     email: values.email,
     userName: values.userName,
     specialization: values.specialization,
+    status: values.status,
     image: values.image,
     department_id: values.department_Id,
   }
@@ -40,6 +41,8 @@ export default function DoctorsUpdate({ doctor, onUpdated }: Props) {
     email: doctor.email ?? '',
     specialization: doctor.specialization ?? '',
     department_Id: doctor.department?.id ?? '',
+    status: doctor.status,
+    leave_status: doctor.leave_status,
     image: undefined,
   }
   const form = useForm<UpdateDoctorFormInput, unknown, UpdateDoctorFormValues>({
@@ -206,6 +209,43 @@ export default function DoctorsUpdate({ doctor, onUpdated }: Props) {
                 </Field>
               )}
             />
+            {([
+              { name: 'status', label: 'Status', placeholder: 'Select a status', options: DOCTOR_STATUS_OPTIONS },
+              // { name: 'leave_status', label: 'Leave Status', placeholder: 'Select a leave status', options: DOCTOR_LEAVE_STATUS_OPTIONS },
+            ] as const).map(statusField => (
+              <Controller
+                key={statusField.name}
+                control={form.control}
+                name={statusField.name}
+                render={({ field }) => (
+                  <Field data-invalid={!!errors[statusField.name]}>
+                    <FieldLabel htmlFor={`${id}-${statusField.name}`}>{statusField.label}</FieldLabel>
+                    <Select
+                      items={statusField.options.map(option => ({ value: option.value, label: option.label }))}
+                      value={field.value || null}
+                      onValueChange={value => field.onChange(value ?? '')}
+                      disabled={busy}
+                    >
+                      <SelectTrigger
+                        id={`${id}-${statusField.name}`}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        className="w-full"
+                        aria-required="true"
+                        aria-invalid={!!errors[statusField.name]}
+                        aria-describedby={errors[statusField.name] ? `${id}-${statusField.name}-error` : undefined}
+                      >
+                        <SelectValue placeholder={statusField.placeholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusField.options.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FieldError id={`${id}-${statusField.name}-error`} errors={[errors[statusField.name]]} />
+                  </Field>
+                )}
+              />
+            ))}
             <Controller
               control={form.control}
               name="image"

@@ -23,6 +23,7 @@ export default function AdminDoctors() {
         page={page}
         onPageChange={setPage}
         onUpdated={refreshDoctors}
+        onDeleted={refreshDoctors}
         onRetry={() => {
           // Query errors are displayed by the list.
           void refreshDoctors().catch(() => {})

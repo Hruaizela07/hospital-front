@@ -18,8 +18,8 @@ export default function DoctorDuty() {
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Doctor Duty</h1>
         <div className="flex flex-wrap justify-end gap-2">
-          <AddMonthlyDuty onCreated={refreshDuty} />
-          {/* <AddDuty onCreated={refreshDuty} /> */}
+          {/* <AddMonthlyDuty onCreated={refreshDuty} /> */}
+          <AddDuty onCreated={refreshDuty} />
         </div>
       </div>
       <DutyList

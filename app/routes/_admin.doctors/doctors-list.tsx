@@ -4,6 +4,7 @@ import { UserRound } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
+import DoctorDelete from './doctor-delete'
 import DoctorsUpdate from './doctors-update'
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
   onPageChange: (page: number) => void
   onRetry: () => void
   onUpdated?: () => void | Promise<void>
+  onDeleted: (id: string) => void | Promise<void>
 }
 
 export function DoctorPhoto({ url, name }: { url?: string, name: string }) {
@@ -45,7 +47,7 @@ export function DoctorPhoto({ url, name }: { url?: string, name: string }) {
   )
 }
 
-export default function DoctorsList({ doctors, loading, error, page, onPageChange, onRetry, onUpdated }: Props) {
+export default function DoctorsList({ doctors, loading, error, page, onPageChange, onRetry, onUpdated, onDeleted }: Props) {
   const lastPage = Math.max(1, doctors?.paginatorInfo.lastPage ?? page)
 
   return (
@@ -93,8 +95,17 @@ export default function DoctorsList({ doctors, loading, error, page, onPageChang
                               <dt className="text-muted-foreground">Email</dt>
                               <dd>{doctor.email || 'Not provided'}</dd>
                             </div>
+                            <div>
+                              <dt className="text-muted-foreground">Status</dt>
+                              <dd>{doctor.status}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-muted-foreground">Leave Status</dt>
+                              <dd>{doctor.leave_status}</dd>
+                            </div>
                           </dl>
                           <DoctorsUpdate doctor={doctor} onUpdated={onUpdated} />
+                          <DoctorDelete doctor={doctor} onDeleted={() => onDeleted(doctor.id)} />
                         </div>
                       </article>
                     ))}

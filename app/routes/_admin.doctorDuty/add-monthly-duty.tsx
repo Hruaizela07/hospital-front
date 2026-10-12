@@ -45,7 +45,7 @@ export default function AddMonthlyDuty({ onCreated }: Props) {
   const selectedDepartment = departments.find(department => department.id === selectedDepartmentId)
   const doctorForDepartment = selectedDepartment?.doctors ?? []
 
-  // const {} = useQuery<>()
+  // const {} = useQuery<>(DEPAR)
 
   const form = useForm<monthlyDutyAddInput, unknown, monthlyDutyAddForm>({
     resolver: zodResolver(monthlyDutySchema),

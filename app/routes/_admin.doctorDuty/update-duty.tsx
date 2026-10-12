@@ -1,5 +1,5 @@
 import type { updateDoctorDutyForm, updateDoctorDutyInput } from './schema'
-import type { DoctorsQuery, DoctorsQueryVariables, UpdateDoctorDutyShiftMutation, UpdateDoctorDutyShiftMutationVariables, UpdateShiftInput } from '~/gql/graphql'
+import type { DoctorDutyShiftsQuery, DoctorsQuery, DoctorsQueryVariables, UpdateDoctorDutyShiftMutation, UpdateDoctorDutyShiftMutationVariables, UpdateShiftInput } from '~/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format, isValid, parse } from 'date-fns'
@@ -20,16 +20,7 @@ import getSubmitErrorMessage from '~/lib/get-submit-error-message'
 import { cn } from '~/lib/utils'
 import { updateDutySchema } from './schema'
 
-export interface DutyForUpdate {
-  doctor: {
-    id: string
-    userName: string
-  }
-  duty_date: string
-  end_time: string
-  id: string
-  start_time: string
-}
+export type DutyForUpdate = DoctorDutyShiftsQuery['doctorDutyShifts']['data'][number]
 
 interface Props {
   duty: DutyForUpdate
@@ -139,7 +130,7 @@ export default function UpdateDuty({ duty, onUpdated }: Props) {
                 <Field data-invalid={!!errors.doctor_id}>
                   <FieldLabel htmlFor={`${id}-doctor`}>Doctor</FieldLabel>
                   <Select
-                    items={doctorOptions.map(doctor => ({ value: doctor.id, label: doctor.userName }))}
+                    items={doctorOptions.map(doctor => ({ value: doctor.id, label: `${doctor.userName} Dept:${doctor.department?.name ?? 'No department'}` }))}
                     value={field.value || null}
                     onValueChange={value => field.onChange(value ?? '')}
                     disabled={busy || doctors.loading || !doctorOptions.length}
@@ -156,7 +147,14 @@ export default function UpdateDuty({ duty, onUpdated }: Props) {
                       <SelectValue placeholder="Select a doctor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {doctorOptions.map(doctor => <SelectItem key={doctor.id} value={doctor.id}>{doctor.userName}</SelectItem>)}
+                      {doctorOptions.map(doctor => (
+                        <SelectItem key={doctor.id} value={doctor.id}>
+                          {doctor.userName}
+                          {' '}
+                          {' '}
+                          {doctor.department?.name }
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FieldError id={`${id}-doctor-error`} errors={[errors.doctor_id]} />

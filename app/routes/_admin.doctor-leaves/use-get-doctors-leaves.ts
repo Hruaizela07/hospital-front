@@ -3,10 +3,11 @@ import { useQuery } from '@apollo/client'
 import { DOCTOR_LEAVE_QUERY } from '~/graphql/query/doctor-leave'
 
 export default function useGetDoctorsLeaves(variables: DoctorLeavesQueryVariables) {
-  const { data, loading, error } = useQuery<DoctorLeavesQuery, DoctorLeavesQueryVariables>(DOCTOR_LEAVE_QUERY, { variables })
+  const { data, loading, error, refetch } = useQuery<DoctorLeavesQuery, DoctorLeavesQueryVariables>(DOCTOR_LEAVE_QUERY, { variables })
   return {
     docLeaves: data?.doctorLeaves.data ?? [],
     paginatorInfo: data?.doctorLeaves.paginatorInfo,
+    refetch,
     loading,
     error,
   }

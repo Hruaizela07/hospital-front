@@ -63,6 +63,7 @@ input CreateDoctorInput {
   image: Upload
   password: String!
   specialization: String!
+  status: String
   userName: String!
 }
 
@@ -100,6 +101,12 @@ input CreateShiftInput {
 scalar Date
 
 scalar DateTime
+
+input DeleteMonthlyShiftInput {
+  doctor_id: ID!
+  month: Int!
+  year: Int!
+}
 
 type Department {
   created_at: DateTime
@@ -142,6 +149,7 @@ type Doctor {
   image: DoctorImage
   leave_status: DoctorLeaveStatus!
   specialization: String
+  status: String!
   updated_at: DateTime
   userName: String!
 }
@@ -235,6 +243,7 @@ type Mutation {
   deleteDepartment(id: ID!): Boolean!
   deleteDoctor(id: ID!): Boolean!
   deleteDoctorDutyShift(id: ID!): Boolean!
+  deleteDoctorDutyShiftsForMonth(input: DeleteMonthlyShiftInput!): Int!
   deleteDoctorLeave(id: ID!): Boolean!
   deletePatient(id: ID!): Boolean!
   login(password: String!, userName: String!): User!
@@ -420,6 +429,7 @@ input UpdateDoctorInput {
   email: String
   image: Upload
   specialization: String
+  status: String
   userName: String
 }
 

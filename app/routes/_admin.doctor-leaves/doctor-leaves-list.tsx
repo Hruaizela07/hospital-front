@@ -1,16 +1,35 @@
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { DoctorPhoto } from '../_admin.doctors/doctors-list'
+import DoctorLeaveDelete from './department-delete'
+import DoctorLeaveAdd from './doctor-leave-add'
+import DoctorLeaveUpdate from './doctor-leave-update'
 import useGetDoctorsLeaves from './use-get-doctors-leaves'
 
 export default function DoctorLeavesList() {
   const [page, setPage] = useState(1)
-  const { docLeaves, paginatorInfo, loading, error } = useGetDoctorsLeaves({ filter: { }, page, first: 12 })
+  const { docLeaves, paginatorInfo, loading, error, refetch } = useGetDoctorsLeaves({ filter: { }, page, first: 12 })
 
   const lastPage = Math.max(1, paginatorInfo?.lastPage ?? page)
+  const refreshLeaves = async () => {
+    await refetch()
+  }
 
   return (
-    <div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Doctor Leaves</h1>
+        <DoctorLeaveAdd onCreated={refreshLeaves} />
+      </div>
+      {loading && (
+        <p role="status" className="text-sm text-muted-foreground">Loading doctor leaves...</p>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">Could not load doctor leaves.</p>
+      )}
+      {!loading && !error && docLeaves.length === 0 && (
+        <p role="status" className="text-sm text-muted-foreground">No doctor leaves loaded yet.</p>
+      )}
       {!loading && !error && docLeaves.length !== 0 && (
         <div className="
           grid w-full grid-cols-1 gap-6
@@ -37,8 +56,22 @@ export default function DoctorLeavesList() {
                     <dt className="text-muted-foreground">Email</dt>
                     <dd>{doctor.doctor.email || 'Not provided'}</dd>
                   </div>
+                  <div>
+                    <dt className="text-muted-foreground">Leave Dates</dt>
+                    <dd>
+                      {doctor.start_date}
+                      {' - '}
+                      {doctor.end_date}
+                    </dd>
+                  </div>
                 </dl>
-                {/* <DoctorsUpdate doctor={doctor} onUpdated={onUpdated} /> */}
+                <div className="flex gap-2">
+                  <DoctorLeaveUpdate leave={doctor} onUpdated={refreshLeaves} />
+                  <DoctorLeaveDelete
+                    doctorLeave={{ id: doctor.id, name: `${doctor.doctor.userName}'s leave` }}
+                    onDeleted={refreshLeaves}
+                  />
+                </div>
               </div>
             </article>
           ))}

@@ -18,6 +18,8 @@ export const DOCTORS_QUERY = gql(`
       }
       email
       specialization
+      status
+      leave_status
       created_at
       updated_at
     }

@@ -16,6 +16,8 @@ export const CREATE_DOCTOR = gql(`
             }
             email
             specialization
+            status
+            leave_status
             created_at
             updated_at
         }
