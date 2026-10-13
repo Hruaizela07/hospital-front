@@ -3,7 +3,7 @@ import type { DoctorAvailableSlotsQuery } from '~/gql/graphql'
 import { CalendarDays, Clock } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
-import { DoctorPhoto } from '../_admin.doctors/doctors-list'
+import { DoctorPhoto } from '../_admin_.doctors/doctors-list'
 
 export type AppointmentSlot = DoctorAvailableSlotsQuery['doctorAvailableSlots'][number]
 

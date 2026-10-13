@@ -14,7 +14,7 @@ export function getRoleHomePath(role?: UserRole) {
       return '/doctor'
     case UserRole.Admin:
     default:
-      return '/admin'
+      return '/adminDoctors'
   }
 }
 

@@ -17,6 +17,9 @@ export const UPDATE_APPOINTMENT = gql(`
       }
     }
     appointment_date
+    start_time
+    end_time
+    duration_minutes
     status
     notes
     created_at

@@ -24,6 +24,7 @@ export default function Route() {
           error={error}
           page={page}
           onPageChange={setPage}
+          onUpdated={refreshDepartments}
           onDeleted={refreshDepartments}
           onRetry={() => {
             // Query errors are displayed by the list.

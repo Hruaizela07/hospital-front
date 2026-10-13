@@ -25,6 +25,9 @@ export const APPOINTMENT_QUERY = gql(`
       specialization
     }
     appointment_date
+    start_time
+    end_time
+    duration_minutes
     status
     notes
     created_at

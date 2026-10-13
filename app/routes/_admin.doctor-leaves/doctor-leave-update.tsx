@@ -101,8 +101,8 @@ export default function DoctorLeaveUpdate({ leave, onUpdated }: Props) {
       <DialogTrigger render={<Button type="button" variant="outline" disabled={busy} />}>Edit</DialogTrigger>
       <DialogContent showCloseButton={!busy}>
         <DialogHeader className="mb-6">
-          <DialogTitle>Edit Doctor Leave</DialogTitle>
-          <DialogDescription>Update the leave date range.</DialogDescription>
+          <DialogTitle>Edit Department</DialogTitle>
+          <DialogDescription>Update the Department.</DialogDescription>
         </DialogHeader>
         <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>

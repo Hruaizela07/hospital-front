@@ -4,6 +4,7 @@ import { Image } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
 import DepartmentDelete from './department-delete'
+import DepartmentUpdate from './department-update'
 
 interface Props {
   departments?: DepartmentsQuery['departments']
@@ -12,10 +13,11 @@ interface Props {
   page: number
   onPageChange: (page: number) => void
   onRetry: () => void
+  onUpdated: () => void | Promise<void>
   onDeleted: () => void | Promise<void>
 }
 
-export default function DepartmentList({ departments, loading, error, page, onPageChange, onRetry, onDeleted }: Props) {
+export default function DepartmentList({ departments, loading, error, page, onPageChange, onRetry, onUpdated, onDeleted }: Props) {
   const lastPage = Math.max(1, departments?.paginatorInfo.lastPage ?? page)
 
   return (
@@ -65,6 +67,7 @@ export default function DepartmentList({ departments, loading, error, page, onPa
                           </p>
                         </div>
                         <div>
+                          <DepartmentUpdate dpt={department} onUpdated={onUpdated} />
                           <DepartmentDelete departM={department} onDeleted={onDeleted} />
                         </div>
                       </article>

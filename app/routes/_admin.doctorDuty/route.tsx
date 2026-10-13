@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import AddDuty from './add-duty'
-import AddMonthlyDuty from './add-monthly-duty'
 import DutyList from './duty-list'
 import useGetDoctorDutyShift from './use-get-doctor-duty-shift'
 

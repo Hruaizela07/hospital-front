@@ -1,5 +1,5 @@
-import type { departmentAddForm, departmentAddInput } from './dpSchema'
-import type { CreateDepartmentMutation, CreateDepartmentMutationVariables } from '~/gql/graphql'
+import type { departmentAddForm, departmentAddInput, departmentUpdateForm, departmentUpdateInput } from './dpSchema'
+import type { CreateDepartmentMutation, CreateDepartmentMutationVariables, DepartmentQuery, DepartmentsQuery, UpdateDepartmentMutation, UpdateDepartmentMutationVariables } from '~/gql/graphql'
 import { useMutation } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useId, useState } from 'react'
@@ -10,30 +10,46 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Field, FieldError, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { Textarea } from '~/components/ui/textarea'
-import { CREATE_DEPARTMENT } from '~/graphql/mutation/create-department'
+import { UPDATE_DEPARTMENT } from '~/graphql/mutation/update-department'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
-import { departmentSchema } from './dpSchema'
+import { updateDpSchema } from './dpSchema'
+
+export type DepartmentUpdates = DepartmentQuery['department']
 
 interface Props {
+  dpt: DepartmentUpdates
   onUpdated?: () => void | Promise<void>
 }
 
-export default function DepartmentAdd({ onUpdated }: Props) {
+function toUpdateMutation(values: departmentUpdateForm): departmentUpdateInput {
+  return {
+    name: values.name,
+    description: values.description,
+  }
+}
+
+export default function DepartmentUpdate({ onUpdated, dpt }: Props) {
   const [open, setOpen] = useState(false)
-  const id = useId()
-  const form = useForm<departmentAddInput, unknown, departmentAddForm>({
-    resolver: zodResolver(departmentSchema),
-    defaultValues: { name: '', description: '' },
+  const fieldId = useId()
+  const defaults: departmentUpdateInput = {
+    name: dpt?.name,
+    description: dpt?.description || undefined,
+  }
+
+  const form = useForm<departmentUpdateInput, unknown, departmentUpdateForm>({
+    resolver: zodResolver(updateDpSchema),
+    defaultValues: defaults,
   })
-  const [createDepartment, { loading }] = useMutation<CreateDepartmentMutation, CreateDepartmentMutationVariables>(CREATE_DEPARTMENT)
+
+  const [updateDepartment, { loading }] = useMutation<UpdateDepartmentMutation, UpdateDepartmentMutationVariables>(UPDATE_DEPARTMENT)
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
 
-  const onSubmit = async (values: departmentAddForm) => {
+  const onSubmit = async (values: departmentUpdateForm) => {
     try {
-      const response = await createDepartment({ variables: { input: values } })
-      if (!response.data?.createDepartment) {
-        toast.error('Department could not be created. Please try again.')
+      const response = await updateDepartment({ variables: { id: dpt!.id, input: toUpdateMutation(values) } })
+      if (!response.data?.updateDepartment) {
+        toast.error('Department could not be updated. Please try again.')
         return
       }
     }
@@ -44,14 +60,14 @@ export default function DepartmentAdd({ onUpdated }: Props) {
 
     form.reset()
     setOpen(false)
-    toast.success('Department created successfully')
+    toast.success('Department Updated successfully')
 
     try {
       await onUpdated?.()
     }
-    
+
     catch {
-      toast.error('Department was created, but refreshing failed. Please reload the page.')
+      toast.error('Department was updated, but refreshing failed. Please reload the page.')
     }
   }
 
@@ -66,7 +82,7 @@ export default function DepartmentAdd({ onUpdated }: Props) {
       }}
     >
       <DialogTrigger render={<Button disabled={busy} />}>
-        Add Department
+        Update
       </DialogTrigger>
       <DialogContent showCloseButton={!busy}>
         <DialogHeader className="mb-6">
@@ -76,27 +92,27 @@ export default function DepartmentAdd({ onUpdated }: Props) {
         <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <Field data-invalid={!!errors.name}>
-              <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
+              <FieldLabel htmlFor={`${fieldId}-name`}>Name</FieldLabel>
               <Input
-                id={`${id}-name`}
+                id={`${fieldId}-name`}
                 disabled={busy}
                 required
                 aria-invalid={!!errors.name}
-                aria-describedby={errors.name ? `${id}-name-error` : undefined}
+                aria-describedby={errors.name ? `${fieldId}-name-error` : undefined}
                 {...form.register('name')}
               />
-              <FieldError id={`${id}-name-error`} errors={[errors.name]} />
+              <FieldError id={`${fieldId}-name-error`} errors={[errors.name]} />
             </Field>
             <Field data-invalid={!!errors.description}>
-              <FieldLabel htmlFor={`${id}-description`}>Description (optional)</FieldLabel>
+              <FieldLabel htmlFor={`${fieldId}-description`}>Description (optional)</FieldLabel>
               <Textarea
-                id={`${id}-description`}
+                id={`${fieldId}-description`}
                 disabled={busy}
                 aria-invalid={!!errors.description}
-                aria-describedby={errors.description ? `${id}-description-error` : undefined}
+                aria-describedby={errors.description ? `${fieldId}-description-error` : undefined}
                 {...form.register('description')}
               />
-              <FieldError id={`${id}-description-error`} errors={[errors.description]} />
+              <FieldError id={`${fieldId}-description-error`} errors={[errors.description]} />
             </Field>
             <div className="flex justify-end gap-2">
               <Button

@@ -26,7 +26,7 @@ export default function Landing() {
             relative flex h-screen w-full flex-col items-center justify-center
           "
           >
-            <div className="z-3 text-6xl font-bold text-green-600">
+            <div className="z-3 font-surfer text-6xl font-bold text-green-600">
               CHOA Arthur M. Blank Hospital
             </div>
             <div className="z-3 size-52">

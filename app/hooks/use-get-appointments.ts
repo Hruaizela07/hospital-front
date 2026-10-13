@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client'
 import { APPOINTMENTS_QUERY } from '~/graphql/query/appointments'
 
 export default function useGetAppointments(variables: AppointmentsQueryVariables) {
-  const { data, loading, error } = useQuery<AppointmentsQuery, AppointmentsQueryVariables>(APPOINTMENTS_QUERY, {
+  const { data, loading, error, refetch } = useQuery<AppointmentsQuery, AppointmentsQueryVariables>(APPOINTMENTS_QUERY, {
     variables,
   })
   return {
@@ -11,5 +11,6 @@ export default function useGetAppointments(variables: AppointmentsQueryVariables
     paginationInfo: data?.appointments.paginatorInfo,
     loading,
     error,
+    refetch,
   }
 }

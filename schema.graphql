@@ -4,14 +4,16 @@ schema {
 }
 
 type Appointment {
-  appointment_date: DateTime
+  appointment_date: Date!
   created_at: DateTime
   doctor: Doctor
   duration_minutes: Int!
+  end_time: String!
   id: ID!
   notes: String
   patient: Patient
-  status: String
+  start_time: String!
+  status: AppointmentStatus!
   updated_at: DateTime
 }
 
@@ -19,7 +21,7 @@ input AppointmentFilterInput {
   doctor_id: ID
   id: ID
   patient_id: ID
-  status: String
+  status: AppointmentStatus
 }
 
 """A paginated list of Appointment items."""
@@ -38,18 +40,25 @@ type AppointmentSlot {
   start: DateTime!
 }
 
+enum AppointmentStatus {
+  CANCELLED
+  COMPLETED
+  SCHEDULED
+}
+
 input ChangePasswordInput {
   password: String!
   passwordConfirmation: String!
 }
 
 input CreateAppointmentInput {
-  appointment_date: DateTime!
+  appointment_date: Date!
   doctor_id: ID!
-  duration_minutes: Int!
+  end_time: String!
   notes: String
   patient_id: ID!
-  status: String
+  start_time: String!
+  status: AppointmentStatus
 }
 
 input CreateDepartmentInput {
@@ -312,6 +321,7 @@ type PaginatorInfo {
 type Patient {
   created_at: DateTime
   date_of_birth: DateTime
+  department: Department
   email: String
   gender: Gender
   id: ID!
@@ -323,11 +333,15 @@ type Patient {
 
 input PatientFilterInput {
   date_of_birth: DateTime
+  department_id: ID
   email: String
+  fromDate: DateTime
   gender: Gender
   id: ID
   name: String
   phone: String
+  search: String
+  toDate: DateTime
 }
 
 """A paginated list of Patient items."""
@@ -411,12 +425,13 @@ enum Trashed {
 }
 
 input UpdateAppointmentInput {
-  appointment_date: DateTime
+  appointment_date: Date
   doctor_id: ID
-  duration_minutes: Int
+  end_time: String
   notes: String
   patient_id: ID
-  status: String
+  start_time: String
+  status: AppointmentStatus
 }
 
 input UpdateDepartmentInput {
