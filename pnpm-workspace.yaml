@@ -1,3 +1,13 @@
+shellEmulator: true
+
+trustPolicy: no-downgrade
+
+# Legacy releases without provenance; locked integrity matches the npm registry.
+# Keep exceptions version-specific so other releases still undergo trust checks.
+trustPolicyExclude:
+  - chokidar@4.0.3
+  - semver@6.3.1
+
 allowBuilds:
-  esbuild: set this to true or false
-  msw: set this to true or false
+  esbuild: true
+  msw: true
