@@ -338,9 +338,9 @@ input PatientFilterInput {
   fromDate: DateTime
   gender: Gender
   id: ID
+  keyword: String
   name: String
   phone: String
-  search: String
   toDate: DateTime
 }
 

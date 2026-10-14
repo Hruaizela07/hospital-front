@@ -1,41 +1,90 @@
-import { useEffect, useMemo, useState } from 'react'
+import { format, isValid, parse } from 'date-fns'
+import { CalendarIcon, SearchIcon, XIcon } from 'lucide-react'
+import { useId, useMemo, useState } from 'react'
 import AppPagination from '~/components/ui/app-pagination'
 import { Button } from '~/components/ui/button'
+import { Calendar } from '~/components/ui/calendar'
 import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
 import useGetAppointments from '~/hooks/use-get-appointments'
+import { cn } from '~/lib/utils'
 import AppointmentAdd from './appointment-add'
 import AppointmentDelete from './appointment-delete'
+import { filterAppointments } from './appointment-filters'
 import AppointmentUpdate from './appointment-update'
 
 const dateTimeSeparator = /[T ]/
 
-function matchesSearch(search: string, values: Array<string | null | undefined>) {
-  const query = search.trim().toLowerCase()
+interface DateFilterProps {
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+}
 
-  if (!query)
-    return true
+function dateFromValue(value: string) {
+  if (!value)
+    return undefined
 
-  return values.some(value => value?.toLowerCase().includes(query))
+  const date = parse(value, 'yyyy-MM-dd', new Date())
+
+  return isValid(date) ? date : undefined
+}
+
+function DateFilter({ id, label, value, onChange }: DateFilterProps) {
+  const selectedDate = dateFromValue(value)
+
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Popover>
+        <PopoverTrigger
+          render={(
+            <Button
+              id={id}
+              type="button"
+              variant="outline"
+              className={cn(
+                'w-full justify-start text-left font-normal',
+                !value && 'text-muted-foreground',
+              )}
+            />
+          )}
+        >
+          <CalendarIcon className="size-4" />
+          {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              onChange(date ? format(date, 'yyyy-MM-dd') : '')
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
+function hasFilters(search: string, startDay: string, endDay: string) {
+  return !!(search.trim() || startDay || endDay)
 }
 
 export default function AppointmentsList() {
+  const id = useId()
   const [currentPage, setCurrentPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [startDay, setStartDay] = useState('')
+  const [endDay, setEndDay] = useState('')
   const { appointments, paginationInfo, error, loading, refetch } = useGetAppointments({ filter: {}, first: 12, page: currentPage })
 
   const filteredAppointments = useMemo(() => (
-    appointments.filter(appointment => matchesSearch(search, [
-      appointment.doctor?.userName,
-      appointment.doctor?.department?.name,
-      appointment.doctor?.specialization,
-      appointment.patient?.name,
-      appointment.patient?.email,
-      appointment.patient?.phone,
-      appointment.patient?.symptom,
-      appointment.status,
-      appointment.notes,
-    ]))
-  ), [appointments, search])
+    filterAppointments(appointments, { endDay, search, startDay })
+  ), [appointments, endDay, search, startDay])
+  const filtersActive = hasFilters(search, startDay, endDay)
 
   const lastPage = paginationInfo?.lastPage ?? 0
 
@@ -49,14 +98,68 @@ export default function AppointmentsList() {
         <h1 className="text-2xl font-semibold">Appointments</h1>
         <AppointmentAdd onCreated={refreshAppointments} />
       </div>
-      <div>
-        <Input
-          type="search"
-          value={search}
-          onChange={event => setSearch(event.target.value)}
-          placeholder="Search appointments"
-          aria-label="Search appointments"
+      <div className="
+        grid gap-4 rounded-lg border p-4
+        md:grid-cols-2
+        xl:grid-cols-[minmax(14rem,1fr)_minmax(12rem,14rem)_minmax(12rem,14rem)_auto]
+      "
+      >
+        <div className="grid gap-2">
+          <Label htmlFor={`${id}-search`}>Search</Label>
+          <div className="relative">
+            <SearchIcon className="
+              absolute top-1/2 left-3 size-4 -translate-y-1/2
+              text-muted-foreground
+            "
+            />
+            <Input
+              id={`${id}-search`}
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setCurrentPage(1)
+              }}
+              placeholder="Search appointments"
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <DateFilter
+          id={`${id}-start-day`}
+          label="Start day"
+          value={startDay}
+          onChange={(value) => {
+            setStartDay(value)
+            setCurrentPage(1)
+          }}
         />
+        <DateFilter
+          id={`${id}-end-day`}
+          label="End day"
+          value={endDay}
+          onChange={(value) => {
+            setEndDay(value)
+            setCurrentPage(1)
+          }}
+        />
+        <div className="flex items-end">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loading || !filtersActive}
+            className="w-full"
+            onClick={() => {
+              setSearch('')
+              setStartDay('')
+              setEndDay('')
+              setCurrentPage(1)
+            }}
+          >
+            <XIcon className="size-4" />
+            Clear
+          </Button>
+        </div>
       </div>
 
       {loading && (
@@ -69,7 +172,7 @@ export default function AppointmentsList() {
         <p role="status" className="text-sm text-muted-foreground">No appointments loaded yet.</p>
       )}
       {!loading && !error && appointments.length !== 0 && filteredAppointments.length === 0 && (
-        <p role="status" className="text-sm text-muted-foreground">No appointments match your search.</p>
+        <p role="status" className="text-sm text-muted-foreground">No appointments match your filters.</p>
       )}
 
       {!loading && !error && filteredAppointments.length !== 0 && (

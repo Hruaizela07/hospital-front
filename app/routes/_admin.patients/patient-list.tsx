@@ -120,10 +120,12 @@ function PatientAppointmentDate({ patientId }: { patientId: string }) {
 export default function PatientList() {
   const id = useId()
   const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
   const [draftFilters, setDraftFilters] = useState<PatientFilterForm>(emptyFilters)
   const [appliedFilters, setAppliedFilters] = useState<PatientFilterForm>(emptyFilters)
-  const patientFilter = useMemo(() => toPatientFilter(appliedFilters), [appliedFilters])
   const departments = useGetDepartments({ first: 100, page: 1 })
+
+  const patientFilter = useMemo(() => toPatientFilter(appliedFilters), [appliedFilters])
   const departmentOptions = departments.data?.departments.data ?? []
   const filtersActive = hasFilters(appliedFilters)
   const { patients, paginationInfo, error, loading, refetch } = useGetPatients({ filter: patientFilter, first: 10, page })
@@ -147,11 +149,15 @@ export default function PatientList() {
           <Label htmlFor={`${id}-search`}>Search</Label>
           <Input
             id={`${id}-search`}
-            value={draftFilters.search}
-            placeholder="Search patients"
+            type="search"
+            value={search}
             onChange={(event) => {
               setDraftFilters(current => ({ ...current, search: event.target.value }))
+              setSearch(event.target.value)
+              setPage(1)
             }}
+            placeholder="Search appointments"
+            className="pl-9"
           />
         </div>
         <div className="grid gap-2">

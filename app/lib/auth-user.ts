@@ -11,10 +11,10 @@ const cachedUserStorageKey = 'hospital-web.me'
 export function getRoleHomePath(role?: UserRole) {
   switch (role) {
     case UserRole.Doctors:
-      return '/doctor'
+      return '/doctors'
     case UserRole.Admin:
     default:
-      return '/adminDoctors'
+      return '/doctors'
   }
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
-import { DoctorPhoto } from '../_admin_.doctors/doctors-list'
+import { DoctorPhoto } from '../_admin.doctors/doctors-list'
 import DoctorLeaveDelete from './department-delete'
 import DoctorLeaveAdd from './doctor-leave-add'
 import DoctorLeaveUpdate from './doctor-leave-update'

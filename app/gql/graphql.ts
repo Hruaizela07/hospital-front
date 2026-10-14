@@ -480,9 +480,9 @@ export type PatientFilterInput = {
   fromDate?: InputMaybe<Scalars['DateTime']['input']>;
   gender?: InputMaybe<Gender>;
   id?: InputMaybe<Scalars['ID']['input']>;
+  keyword?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
-  search?: InputMaybe<Scalars['String']['input']>;
   toDate?: InputMaybe<Scalars['DateTime']['input']>;
 };
 

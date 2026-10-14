@@ -3,7 +3,7 @@ import type { CreateAppointmentMutation, CreateAppointmentMutationVariables, Doc
 import { useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format, isValid, parse } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
+import { CalendarIcon, CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -37,8 +37,21 @@ function dateFromAppointmentValue(value?: string) {
   return isValid(date) ? date : undefined
 }
 
+function matchesSearch(search: string, values: Array<string | null | undefined>) {
+  const query = search.trim().toLowerCase()
+
+  if (!query)
+    return true
+
+  return values.some(value => value?.toLowerCase().includes(query))
+}
+
 export default function AppointmentAdd({ onCreated }: Props) {
   const [open, setOpen] = useState(false)
+  const [doctorSearch, setDoctorSearch] = useState('')
+  const [doctorPopoverOpen, setDoctorPopoverOpen] = useState(false)
+  const [patientSearch, setPatientSearch] = useState('')
+  const [patientPopoverOpen, setPatientPopoverOpen] = useState(false)
 
   const id = useId()
   const form = useForm<AptmFormInput, unknown, AptmFormValue>({
@@ -70,12 +83,22 @@ export default function AppointmentAdd({ onCreated }: Props) {
   const doctorData = doctors.data?.doctors.data
   const patientOptions = useMemo(() => patientData ?? [], [patientData])
   const doctorOptions = useMemo(() => doctorData ?? [], [doctorData])
+  const filteredDoctorOptions = useMemo(() => (
+    doctorOptions.filter(doctor => matchesSearch(doctorSearch, [doctor.userName, doctor.department?.name]))
+  ), [doctorOptions, doctorSearch])
+  const filteredPatientOptions = useMemo(() => (
+    patientOptions.filter(patient => matchesSearch(patientSearch, [patient.name, patient.symptom]))
+  ), [patientOptions, patientSearch])
 
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
 
   const resetDialog = () => {
     form.reset()
+    setDoctorSearch('')
+    setDoctorPopoverOpen(false)
+    setPatientSearch('')
+    setPatientPopoverOpen(false)
   }
 
   const onSubmit = async (values: AptmFormValue) => {
@@ -127,123 +150,6 @@ export default function AppointmentAdd({ onCreated }: Props) {
 
             <Controller
               control={form.control}
-              name="patient_id"
-              render={({ field }) => (
-                <Field data-invalid={!!errors.patient_id}>
-                  <FieldLabel htmlFor={`${id}-patient`}>Patient</FieldLabel>
-                  <Select
-                    value={field.value || null}
-                    onValueChange={value => field.onChange(value ?? '')}
-                    disabled={busy || patients.loading}
-                  >
-                    <SelectTrigger
-                      id={`${id}-patient`}
-                      ref={field.ref}
-                      onBlur={field.onBlur}
-                      className="w-full"
-                      aria-required="true"
-                      aria-invalid={!!errors.patient_id}
-                      aria-describedby={errors.patient_id ? `${id}-patient-error` : undefined}
-                    >
-                      <SelectValue placeholder="Select a patient" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {patientOptions.map(patient => (
-                        <SelectItem key={patient.id} value={`${patient.name} Symptom:${patient.symptom}`}>
-                          {patient.name}
-                          <span className="text-muted-foreground">
-                            {' '}
-                            {patient.phone ?? patient.email ?? 'No contact'}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError id={`${id}-patient-error`} errors={[errors.patient_id]} />
-                  {patients.loading && (
-                    <p
-                      role="status"
-                      className="text-sm text-muted-foreground"
-                    >
-                      Loading patients...
-                    </p>
-                  )}
-                  {patients.error && (
-                    <p
-                      role="alert"
-                      className="text-sm text-destructive"
-                    >
-                      Could not load patients.
-                    </p>
-                  )}
-                  {!patients.loading && !patients.error && !patientOptions.length && (
-                    <p className="text-sm text-muted-foreground">Create a patient before adding an appointment.</p>
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="doctor_id"
-              render={({ field }) => (
-                <Field data-invalid={!!errors.doctor_id}>
-                  <FieldLabel htmlFor={`${id}-doctor`}>Doctor</FieldLabel>
-                  <Select
-                    items={doctorOptions.map(doctor => ({ value: doctor.id, label: doctor.userName }))}
-                    value={field.value || null}
-                    onValueChange={value => field.onChange(value ?? '')}
-                    disabled={busy || doctors.loading || !doctorOptions.length}
-                  >
-                    <SelectTrigger
-                      id={`${id}-doctor`}
-                      ref={field.ref}
-                      onBlur={field.onBlur}
-                      className="w-full"
-                      aria-required="true"
-                      aria-invalid={!!errors.doctor_id}
-                      aria-describedby={errors.doctor_id ? `${id}-doctor-error` : undefined}
-                    >
-                      <SelectValue placeholder="Select a doctor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {doctorOptions.map(doctor => (
-                        <SelectItem key={doctor.id} value={doctor.id}>
-                          {doctor.userName}
-                          <span className="text-muted-foreground">
-                            {' '}
-                            {doctor.department?.name ?? 'No department'}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError id={`${id}-doctor-error`} errors={[errors.doctor_id]} />
-                  {doctors.loading && (
-                    <p
-                      role="status"
-                      className="text-sm text-muted-foreground"
-                    >
-                      Loading doctors...
-                    </p>
-                  )}
-                  {doctors.error && (
-                    <p
-                      role="alert"
-                      className="text-sm text-destructive"
-                    >
-                      Could not load doctors.
-                    </p>
-                  )}
-                  {!doctors.loading && !doctors.error && !doctorOptions.length && (
-                    <p className="text-sm text-muted-foreground">Create a doctor before adding an appointment.</p>
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
               name="appointment_date"
               render={({ field }) => {
                 const selectedDate = dateFromAppointmentValue(field.value)
@@ -282,6 +188,236 @@ export default function AppointmentAdd({ onCreated }: Props) {
                       </PopoverContent>
                     </Popover>
                     <FieldError id={`${id}-appointment-date-error`} errors={[errors.appointment_date]} />
+                  </Field>
+                )
+              }}
+            />
+
+            <Controller
+              control={form.control}
+              name="patient_id"
+              render={({ field }) => {
+                const selectedPatient = patientOptions.find(patient => patient.id === field.value)
+
+                return (
+                  <Field data-invalid={!!errors.patient_id}>
+                    <FieldLabel htmlFor={`${id}-patient`}>Patient</FieldLabel>
+                    <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
+                      <PopoverTrigger render={(
+                        <Button
+                          id={`${id}-patient`}
+                          type="button"
+                          variant="outline"
+                          disabled={busy || patients.loading || !patientOptions.length}
+                          aria-required="true"
+                          aria-invalid={!!errors.patient_id}
+                          aria-describedby={errors.patient_id ? `${id}-patient-error` : undefined}
+                          className={cn(
+                            'w-full justify-between',
+                            !selectedPatient && 'text-muted-foreground',
+                          )}
+                        />
+                      )}
+                      >
+                        { selectedPatient
+                          ? `${selectedPatient.name} - ${selectedPatient.symptom}`
+                          : 'Select a Patient'}
+                        <ChevronsUpDownIcon className="size-4 opacity-50" />
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="start"
+                        className="w-(--anchor-width) p-2"
+                      >
+                        <Input
+                          type="search"
+                          value={patientSearch}
+                          onChange={event => setPatientSearch(event.target.value)}
+                          placeholder="Search Patients"
+                          disabled={busy || patients.loading}
+                        />
+                        <div className="max-h-56 overflow-y-auto">
+                          {filteredPatientOptions.map(patient => (
+                            <Button
+                              key={patient.id}
+                              type="button"
+                              className={cn(
+                                `
+                                  flex w-full items-center justify-between gap-2
+                                  rounded-md bg-white px-2 py-1.5 text-left
+                                  text-sm text-black
+                                  hover:bg-accent hover:text-accent-foreground
+                                `,
+                                patient.id === field.value && `
+                                  bg-accent text-accent-foreground
+                                `,
+                              )}
+                              onClick={() => {
+                                field.onChange(patient.id)
+                                setPatientPopoverOpen(false)
+                              }}
+                            >
+                              <span>
+                                {patient.name}
+                                <span className="text-sm text-muted-foreground">
+                                  {' '}
+                                  Symptom:
+                                  {' '}
+                                  {patient.symptom ?? 'No symptom'}
+                                </span>
+                              </span>
+                            </Button>
+                          ))}
+                          {!filteredPatientOptions.length && (
+                            <p
+                              className="
+                                px-2 py-1.5 text-sm text-muted-foreground
+                              "
+                            >
+                              No Patient match your search.
+                            </p>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <FieldError id={`${id}-patient-error`} errors={[errors.patient_id]} />
+                    {patients.loading && (
+                      <p
+                        role="status"
+                        className="text-sm text-muted-foreground"
+                      >
+                        Loading patients...
+                      </p>
+                    )}
+                    {patients.error && (
+                      <p
+                        role="alert"
+                        className="text-sm text-destructive"
+                      >
+                        Could not load patients.
+                      </p>
+                    )}
+                    {!patients.loading && !patients.error && !patientOptions.length && (
+                      <p className="text-sm text-muted-foreground">Create a patient before adding an appointment.</p>
+                    )}
+                  </Field>
+                )
+              }}
+            />
+
+            <Controller
+              control={form.control}
+              name="doctor_id"
+              render={({ field }) => {
+                const selectedDoctor = doctorOptions.find(doctor => doctor.id === field.value)
+
+                return (
+                  <Field data-invalid={!!errors.doctor_id}>
+                    <FieldLabel htmlFor={`${id}-doctor`}>Doctor</FieldLabel>
+                    <Popover open={doctorPopoverOpen} onOpenChange={setDoctorPopoverOpen}>
+                      <PopoverTrigger
+                        render={(
+                          <Button
+                            id={`${id}-doctor`}
+                            type="button"
+                            variant="outline"
+                            disabled={busy || doctors.loading || !doctorOptions.length}
+                            aria-required="true"
+                            aria-invalid={!!errors.doctor_id}
+                            aria-describedby={errors.doctor_id ? `${id}-doctor-error` : undefined}
+                            className={cn(
+                              'w-full justify-between',
+                              !selectedDoctor && 'text-muted-foreground',
+                            )}
+                          />
+                        )}
+                      >
+                        {selectedDoctor
+                          ? `${selectedDoctor.userName} - ${selectedDoctor.department?.name ?? 'No department'}`
+                          : 'Select a doctor'}
+                        <ChevronsUpDownIcon className="size-4 opacity-50" />
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="start"
+                        className="w-(--anchor-width) p-2"
+                      >
+                        <Input
+                          type="search"
+                          value={doctorSearch}
+                          onChange={event => setDoctorSearch(event.target.value)}
+                          placeholder="Search doctors"
+                          disabled={busy || doctors.loading}
+                        />
+                        <div className="max-h-56 overflow-y-auto">
+                          {filteredDoctorOptions.map(doctor => (
+                            <button
+                              key={doctor.id}
+                              type="button"
+                              className={cn(
+                                `
+                                  flex w-full items-center justify-between gap-2
+                                  rounded-md px-2 py-1.5 text-left text-sm
+                                  hover:bg-accent hover:text-accent-foreground
+                                `,
+                                doctor.id === field.value && `
+                                  bg-accent text-accent-foreground
+                                `,
+                              )}
+                              onClick={() => {
+                                field.onChange(doctor.id)
+                                setDoctorPopoverOpen(false)
+                              }}
+                            >
+                              <span>
+                                {doctor.userName}
+                                <span className="text-sm text-muted-foreground">
+                                  {' '}
+                                  {doctor.department?.name ?? 'No department'}
+                                  {' '}
+                                  <span className={cn('rounded-lg border px-1', doctor.leave_status === 'NOT_ON_LEAVE'
+                                    ? 'bg-green-500 text-white'
+                                    : 'bg-red-400 text-white')}
+                                  >
+                                    {doctor.leave_status}
+                                  </span>
+                                </span>
+                              </span>
+                              {doctor.id === field.value && (
+                                <CheckIcon className="size-4" />
+                              )}
+                            </button>
+                          ))}
+                          {!filteredDoctorOptions.length && (
+                            <p
+                              className="
+                                px-2 py-1.5 text-sm text-muted-foreground
+                              "
+                            >
+                              No doctors match your search.
+                            </p>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <FieldError id={`${id}-doctor-error`} errors={[errors.doctor_id]} />
+                    {doctors.loading && (
+                      <p
+                        role="status"
+                        className="text-sm text-muted-foreground"
+                      >
+                        Loading doctors...
+                      </p>
+                    )}
+                    {doctors.error && (
+                      <p
+                        role="alert"
+                        className="text-sm text-destructive"
+                      >
+                        Could not load doctors.
+                      </p>
+                    )}
+                    {!doctors.loading && !doctors.error && !doctorOptions.length && (
+                      <p className="text-sm text-muted-foreground">Create a doctor before adding an appointment.</p>
+                    )}
                   </Field>
                 )
               }}
