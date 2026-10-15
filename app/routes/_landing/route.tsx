@@ -1,3 +1,4 @@
+/* eslint-disable better-tailwindcss/no-unknown-classes */
 import type { LenisRef } from 'lenis/react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
@@ -142,7 +143,7 @@ export default function Landing() {
       <div className="min-h-lvh w-full">
         <LoaderAnime overlayOnly ready={assetsReady} onComplete={revealLanding} />
         <div className="min-h-screen" ref={mainRef} inert={isLoading} aria-busy={isLoading}>
-          <LandingNav />
+          {/* <LandingNav /> */}
           <section className="
             sticky top-0 z-0 flex h-screen w-full flex-col items-center
             justify-center overflow-hidden
@@ -150,14 +151,16 @@ export default function Landing() {
           >
             <div
               data-landing-heading
-              className="z-3 font-surfer text-6xl font-bold text-green-600"
+              className="
+                strikeme z-3 font-surfer text-6xl font-bold text-green-800
+              "
             >
               CHOA Arthur M. Blank Hospital
             </div>
             <div data-landing-logo className="z-3 size-52">
               <img src="/logo2.png" alt="logo" className="size-full" />
             </div>
-            <div className="absolute z-1 h-screen w-full bg-black/30" />
+            <div className="absolute z-1 h-screen w-full bg-black/15" />
             <div data-landing-video className="absolute z-0 size-full h-screen">
               <Video />
             </div>

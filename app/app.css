@@ -169,6 +169,14 @@ mux-player::part(gesture-layer) {
   display: none;
 }
 
+.strikeme {
+  color: rgb(251, 252, 251);
+  /* color: rgb(24, 139, 9); */
+  /* background-color: white; */
+  text-shadow: -1px -1px 0 #000, 0.5px -1px 0 #000, -1px -1px 0 #000, 0.5px 0.5px 0 #000;
+}
+
+
 .fontsurfer{
   font-family: var(--font-surfer);
 }

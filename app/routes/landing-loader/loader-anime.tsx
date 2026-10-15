@@ -30,11 +30,11 @@ export default function LoaderAnime({ overlayOnly = false, ready = true, onCompl
 
   useGSAP(() => {
     const select = gsap.utils.selector(mainRef)
-    const navAnchors = select('[data-navigation-link]')
-    const navLogo = select('[data-navigation-logo]')
-    const navLinks = navAnchors.length
-      ? SplitText.create(navAnchors, { type: 'words', mask: 'words', wordsClass: 'nav-word' })
-      : null
+    // const navAnchors = select('[data-navigation-link]')
+    // const navLogo = select('[data-navigation-logo]')
+    // const navLinks = navAnchors.length
+    //   ? SplitText.create(navAnchors, { type: 'words', mask: 'words', wordsClass: 'nav-word' })
+    //   : null
 
     const heading = overlayOnly
       ? null
@@ -49,10 +49,10 @@ export default function LoaderAnime({ overlayOnly = false, ready = true, onCompl
       gsap.set(heading.chars, { y: 50, opacity: 0, scale: 0.5 })
       gsap.set('.hero-image img', { autoAlpha: 0 })
     }
-    if (navLogo.length)
-      gsap.set(navLogo, { scale: 0 })
-    if (navLinks)
-      gsap.set(navLinks.words, { yPercent: 100 })
+    // if (navLogo.length)
+    //   gsap.set(navLogo, { scale: 0 })
+    // if (navLinks)
+    //   gsap.set(navLinks.words, { yPercent: 100 })
 
     const itemTargets = [
       { x: '-20vw', y: '-30vh', rotation: -20 },
@@ -149,18 +149,18 @@ export default function LoaderAnime({ overlayOnly = false, ready = true, onCompl
     if (!overlayOnly && heading) {
       tl.set('[data-landing-nav]', { autoAlpha: 1 }, '-=0.4')
       // Preserve the reveal timing even while the optional navigation is absent.
-      tl.to(navLogo.length ? navLogo : { scale: 1 }, {
-        scale: 1,
-        duration: 0.75,
-        ease: 'power3.out',
-      }, '-=0.4')
+      // tl.to(navLogo.length ? navLogo : { scale: 1 }, {
+      //   scale: 1,
+      //   duration: 0.75,
+      //   ease: 'power3.out',
+      // }, '-=0.4')
 
-      tl.to(navLinks?.words.length ? navLinks.words : { yPercent: 0 }, {
-        yPercent: 0,
-        duration: 0.75,
-        stagger: 0.05,
-        ease: 'power3.out',
-      }, '<0.1')
+      // tl.to(navLinks?.words.length ? navLinks.words : { yPercent: 0 }, {
+      //   yPercent: 0,
+      //   duration: 0.75,
+      //   stagger: 0.05,
+      //   ease: 'power3.out',
+      // }, '<0.1')
 
       tl.to(heading.chars, {
         y: 0,
@@ -194,7 +194,7 @@ export default function LoaderAnime({ overlayOnly = false, ready = true, onCompl
       waitingRef.current = false
       // These tweens are created later by onStart, outside the hook's context.
       floatingTweens.forEach(tween => tween.revert())
-      navLinks?.revert()
+      // navLinks?.revert()
       heading?.revert()
     }
   }, { scope: mainRef })
@@ -217,7 +217,7 @@ export default function LoaderAnime({ overlayOnly = false, ready = true, onCompl
 
         <div className="preloader-logo"><img src="/logo2.png" alt="Image" /></div>
       </div>
-      {!overlayOnly && <LandingNav />}
+      {/* {!overlayOnly && <LandingNav />} */}
       {!overlayOnly && (
         <section className="hero">
           <div className="hero-header"><h1>CHOA Arthur M. Blank Hospital</h1></div>
