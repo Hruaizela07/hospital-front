@@ -7,9 +7,9 @@ import { SplitText } from 'gsap/SplitText'
 import { ReactLenis } from 'lenis/react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import LandingNav from '~/components/common/landing-nav'
 import LoaderAnime from '~/routes/landing-loader/loader-anime'
 import { waitForLandingAssets } from './asset-readiness'
+import Nav from './nav'
 import Video from './video'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText)
@@ -49,15 +49,15 @@ export default function Landing() {
       const entrance = gsap.timeline({ paused: isLoading })
       entranceRef.current = entrance
 
-      entrance.fromTo('[data-landing-nav]', {
-        yPercent: -100,
-        autoAlpha: 0,
-      }, {
-        yPercent: 0,
-        autoAlpha: 1,
-        duration: 0.75,
-        ease: 'power3.out',
-      }, 0)
+      // entrance.fromTo('[data-landing-nav]', {
+      //   yPercent: -100,
+      //   autoAlpha: 0,
+      // }, {
+      //   yPercent: 0,
+      //   autoAlpha: 1,
+      //   duration: 0.75,
+      //   ease: 'power3.out',
+      // }, 0)
 
       entrance.fromTo('[data-landing-video]', {
         scale: 1.08,
@@ -143,28 +143,54 @@ export default function Landing() {
       <div className="min-h-lvh w-full">
         <LoaderAnime overlayOnly ready={assetsReady} onComplete={revealLanding} />
         <div className="min-h-screen" ref={mainRef} inert={isLoading} aria-busy={isLoading}>
-          {/* <LandingNav /> */}
+
           <section className="
-            sticky top-0 z-0 flex h-screen w-full flex-col items-center
-            justify-center overflow-hidden
+            sticky top-0 z-0 flex h-screen w-full flex-col overflow-hidden
           "
           >
-            <div
-              data-landing-heading
-              className="
-                strikeme z-3 font-surfer text-6xl font-bold text-green-800
-              "
-            >
-              CHOA Arthur M. Blank Hospital
-            </div>
-            <div data-landing-logo className="z-3 size-52">
-              <img src="/logo2.png" alt="logo" className="size-full" />
-            </div>
-            <div className="absolute z-1 h-screen w-full bg-black/15" />
-            <div data-landing-video className="absolute z-0 size-full h-screen">
-              <Video />
-            </div>
 
+            <div className="
+              flex h-screen w-full flex-col items-center justify-center
+            "
+            >
+              <div
+                data-landing-heading
+                className="
+                  strikeme z-3 hidden font-surfer text-6xl font-bold
+                  text-green-800
+                  lg:block
+                "
+              >
+                CHOA Arthur M. Blank Hospital
+              </div>
+              <div
+                data-landing-heading
+                className="
+                  strikeme z-3 flex flex-col items-center font-surfer text-4xl
+                  font-bold
+                  lg:hidden
+                "
+              >
+                <p>CHOA Arthur</p>
+                <p>M. Blank Hospital</p>
+              </div>
+              <div
+                data-landing-logo
+                className="
+                  z-3 size-32
+                  lg:size-52
+                "
+              >
+                <img src="/logo2.png" alt="logo" className="size-full" />
+              </div>
+              <div className="absolute z-1 h-screen w-full bg-black/15" />
+              <div
+                data-landing-video
+                className="absolute z-0 size-full h-screen"
+              >
+                <Video />
+              </div>
+            </div>
           </section>
           <section
             data-landing-secondary
@@ -173,9 +199,7 @@ export default function Landing() {
               bg-red-400
             "
           >
-            <div>
-              <img src="/logo.png" alt="" />
-            </div>
+
             <div
               onClick={() => navigate('/landing-loader')}
               className="border p-7"

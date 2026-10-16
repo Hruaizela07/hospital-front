@@ -20,6 +20,7 @@ import { DOCTORS_QUERY } from '~/graphql/query/doctors'
 import { PATIENTS_QUERY } from '~/graphql/query/patients'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
 import { cn } from '~/lib/utils'
+import { timePeriod } from './appointment-time-options'
 import { APPOINTMENT_STATUS_OPTIONS, aptmSchema } from './schema'
 
 const DATE_TIME_SEPARATOR = /[T ]/
@@ -63,6 +64,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
       notes: '',
       patient_id: '',
       start_time: '',
+      reason_for_visit: '',
       status: APPOINTMENT_STATUS_OPTIONS[0].value,
     },
   })
@@ -87,7 +89,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
     doctorOptions.filter(doctor => matchesSearch(doctorSearch, [doctor.userName, doctor.department?.name]))
   ), [doctorOptions, doctorSearch])
   const filteredPatientOptions = useMemo(() => (
-    patientOptions.filter(patient => matchesSearch(patientSearch, [patient.name, patient.symptom]))
+    patientOptions.filter(patient => matchesSearch(patientSearch, [patient.name]))
   ), [patientOptions, patientSearch])
 
   const { errors, isSubmitting } = form.formState
@@ -220,7 +222,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
                       )}
                       >
                         { selectedPatient
-                          ? `${selectedPatient.name} - ${selectedPatient.symptom}`
+                          ? `${selectedPatient.name} `
                           : 'Select a Patient'}
                         <ChevronsUpDownIcon className="size-4 opacity-50" />
                       </PopoverTrigger>
@@ -258,12 +260,12 @@ export default function AppointmentAdd({ onCreated }: Props) {
                             >
                               <span>
                                 {patient.name}
-                                <span className="text-sm text-muted-foreground">
+                                {/* <span className="text-sm text-muted-foreground">
                                   {' '}
                                   Symptom:
                                   {' '}
-                                  {patient.symptom ?? 'No symptom'}
-                                </span>
+                                  {patient. ?? 'No symptom'}
+                                </span> */}
                               </span>
                             </Button>
                           ))}
@@ -302,6 +304,26 @@ export default function AppointmentAdd({ onCreated }: Props) {
                   </Field>
                 )
               }}
+            />
+
+            <Controller
+              control={form.control}
+              name="reason_for_visit"
+              render={({ field }) => (
+                <Field data-invalid={!!errors.reason_for_visit}>
+                  <FieldLabel htmlFor={`${id}-reason-for-visit`}>Reason for visit</FieldLabel>
+                  <Input
+                    id={`${id}-reason-for-visit`}
+                    disabled={busy}
+                    required
+                    aria-invalid={!!errors.reason_for_visit}
+                    aria-describedby={errors.reason_for_visit ? `${id}-reason-for-visit-error` : undefined}
+                    {...field}
+                  />
+                  <FieldError id={`${id}-reason-for-visit-error`} errors={[errors.reason_for_visit]} />
+                </Field>
+              )}
+
             />
 
             <Controller
@@ -439,16 +461,26 @@ export default function AppointmentAdd({ onCreated }: Props) {
                   render={({ field }) => (
                     <Field data-invalid={!!errors[timeField.name]}>
                       <FieldLabel htmlFor={`${id}-${timeField.name}`}>{timeField.label}</FieldLabel>
-                      <Input
-                        id={`${id}-${timeField.name}`}
-                        type="time"
-                        value={field.value?.slice(0, 5) ?? ''}
-                        disabled={busy}
-                        aria-invalid={!!errors[timeField.name]}
-                        aria-describedby={errors[timeField.name] ? `${id}-${timeField.name}-error` : undefined}
-                        onBlur={field.onBlur}
-                        onChange={event => field.onChange(event.target.value)}
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id={`${id}-${timeField.name}`}
+                          type="time"
+                          value={field.value?.slice(0, 5) ?? ''}
+                          disabled={busy}
+                          onBlur={field.onBlur}
+                          aria-invalid={!!errors[timeField.name]}
+                          aria-describedby={errors[timeField.name] ? `${id}-${timeField.name}-error` : undefined}
+                          onChange={event => field.onChange(event.target.value)}
+                        />
+                        <span
+                          className="
+                            min-w-10 text-sm font-medium text-muted-foreground
+                          "
+                          aria-live="polite"
+                        >
+                          {field.value ? timePeriod(field.value) : '—'}
+                        </span>
+                      </div>
                       <FieldError id={`${id}-${timeField.name}-error`} errors={[errors[timeField.name]]} />
                     </Field>
                   )}

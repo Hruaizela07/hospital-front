@@ -25,6 +25,7 @@ export const aptmSchema = z.object({
   start_time: appointmentTimeSchema,
   end_time: appointmentTimeSchema,
   status: z.enum(appointmentStatusValues),
+  reason_for_visit: z.string(),
   notes: z.string().trim().optional(),
 })
 
@@ -39,6 +40,7 @@ export const aptmUpSchema = z.object({
   start_time: appointmentTimeSchema,
   end_time: appointmentTimeSchema,
   status: z.enum(appointmentStatusValues),
+  reason_for_visit: z.string().optional(),
   notes: z.string().trim().optional(),
 })
 

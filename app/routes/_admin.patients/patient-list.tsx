@@ -262,10 +262,10 @@ export default function PatientList() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
-                          <TableHead>Symptom</TableHead>
                           <TableHead>Email</TableHead>
                           <TableHead>Phone</TableHead>
                           <TableHead>Gender</TableHead>
+                          <TableHead>Address</TableHead>
                           <TableHead>Date of birth</TableHead>
                           <TableHead>Appointment date</TableHead>
                         </TableRow>
@@ -274,10 +274,10 @@ export default function PatientList() {
                         {patients.map(patient => (
                           <TableRow key={patient.id}>
                             <TableCell className="font-medium">{patient.name}</TableCell>
-                            <TableCell>{patient.symptom?.trim() || 'Not provided'}</TableCell>
                             <TableCell>{patient.email?.trim() || 'Not provided'}</TableCell>
                             <TableCell>{patient.phone?.trim() || 'Not provided'}</TableCell>
                             <TableCell>{patient.gender || 'Not provided'}</TableCell>
+                            <TableCell>{patient.address?.trim() || 'Not provided'}</TableCell>
                             <TableCell>{patient.date_of_birth?.split(dateTimeSeparator)[0] || 'Not provided'}</TableCell>
                             <TableCell>
                               <PatientAppointmentDate patientId={patient.id} />

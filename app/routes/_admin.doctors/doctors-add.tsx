@@ -55,29 +55,8 @@ export default function DoctorsAdd({ onCreated }: Props) {
     notifyOnNetworkStatusChange: true,
   })
   const options = departments.data?.departments.data ?? []
-  const pagination = departments.data?.departments.paginatorInfo
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
-
-  const loadMoreDepartments = async () => {
-    if (!pagination)
-      return
-    try {
-      await departments.fetchMore({
-        variables: { page: pagination.currentPage + 1 },
-        updateQuery: (previous, { fetchMoreResult }) => ({
-          ...fetchMoreResult,
-          departments: {
-            ...fetchMoreResult.departments,
-            data: [...new Map([...previous.departments.data, ...fetchMoreResult.departments.data].map(item => [item.id, item])).values()],
-          },
-        }),
-      })
-    }
-    catch (error) {
-      toast.error(getSubmitErrorMessage(error, 'Could not load more departments.'))
-    }
-  }
 
   const onSubmit = async (values: DoctorFormValues) => {
     try {
@@ -195,9 +174,7 @@ export default function DoctorsAdd({ onCreated }: Props) {
                   {!departments.loading && !departments.error && !options.length && (
                     <p className="text-sm text-muted-foreground">Create a department before adding a doctor.</p>
                   )}
-                  {pagination && pagination.currentPage < pagination.lastPage && (
-                    <Button type="button" variant="outline" disabled={busy || departments.loading} onClick={loadMoreDepartments}>Load more departments</Button>
-                  )}
+
                 </Field>
               )}
             />

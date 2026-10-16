@@ -11,7 +11,7 @@ export default function AdminDoctors() {
   }
 
   return (
-    <div className="mx-auto my-4 flex w-full max-w-360 flex-col gap-6">
+    <div className="mx-auto my-4 flex w-full max-w-390 flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Doctors</h1>
         <DoctorsAdd onCreated={refreshDoctors} />

@@ -1,3 +1,4 @@
+import type { DateRange } from 'react-day-picker'
 import type { doctorLeaveForm, doctorLeaveInput } from './schema'
 import type { CreateDoctorLeaveMutation, CreateDoctorLeaveMutationVariables, DoctorsQuery, DoctorsQueryVariables } from '~/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
@@ -17,6 +18,7 @@ import { CREATE_DOCTOR_LEAVE } from '~/graphql/mutation/create-doctor-leave'
 import { DOCTORS_QUERY } from '~/graphql/query/doctors'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
 import { cn } from '~/lib/utils'
+import { leaveRangeToFormValues } from './leave-date-range'
 import { doctorLeaveSchema } from './schema'
 
 interface Props {
@@ -53,6 +55,10 @@ export default function DoctorLeaveAdd({ onCreated }: Props) {
   const doctorOptions = doctors.data?.doctors.data ?? []
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
+  const selectedRange: DateRange = {
+    from: dateFromFormValue(form.watch('start_date')),
+    to: dateFromFormValue(form.watch('end_date')),
+  }
 
   const onSubmit = async (values: doctorLeaveForm) => {
     let createdLeave: CreateDoctorLeaveMutation['createDoctorLeave']
@@ -162,56 +168,46 @@ export default function DoctorLeaveAdd({ onCreated }: Props) {
                 </Field>
               )}
             />
-            {([
-              { name: 'start_date', label: 'Start Date' },
-              { name: 'end_date', label: 'End Date' },
-            ] as const).map(dateField => (
-              <Controller
-                key={dateField.name}
-                control={form.control}
-                name={dateField.name}
-                render={({ field }) => {
-                  const selectedDate = dateFromFormValue(field.value)
-
-                  return (
-                    <Field data-invalid={!!errors[dateField.name]}>
-                      <FieldLabel htmlFor={`${id}-${dateField.name}`}>{dateField.label}</FieldLabel>
-                      <Popover>
-                        <PopoverTrigger
-                          render={(
-                            <Button
-                              id={`${id}-${dateField.name}`}
-                              type="button"
-                              variant="outline"
-                              disabled={busy}
-                              aria-invalid={!!errors[dateField.name]}
-                              aria-describedby={errors[dateField.name] ? `${id}-${dateField.name}-error` : undefined}
-                              className={cn(
-                                'w-full justify-start text-left font-normal',
-                                !field.value && 'text-muted-foreground',
-                              )}
-                            />
-                          )}
-                        >
-                          <CalendarIcon className="size-4" />
-                          {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={(date) => {
-                              field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FieldError id={`${id}-${dateField.name}-error`} errors={[errors[dateField.name]]} />
-                    </Field>
-                  )
-                }}
-              />
-            ))}
+            <Field data-invalid={!!errors.start_date || !!errors.end_date}>
+              <FieldLabel htmlFor={`${id}-leave-dates`}>Leave dates</FieldLabel>
+              <Popover>
+                <PopoverTrigger
+                  render={(
+                    <Button
+                      id={`${id}-leave-dates`}
+                      type="button"
+                      variant="outline"
+                      disabled={busy}
+                      aria-invalid={!!errors.start_date || !!errors.end_date}
+                      aria-describedby={errors.start_date || errors.end_date ? `${id}-leave-dates-error` : undefined}
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !selectedRange.from && 'text-muted-foreground',
+                      )}
+                    />
+                  )}
+                >
+                  <CalendarIcon className="size-4" />
+                  {selectedRange.from
+                    ? selectedRange.to
+                      ? `${format(selectedRange.from, 'PPP')} – ${format(selectedRange.to, 'PPP')}`
+                      : `${format(selectedRange.from, 'PPP')} – Select end date`
+                    : 'Pick a date range'}
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-auto p-0">
+                  <Calendar
+                    mode="range"
+                    selected={selectedRange}
+                    onSelect={(range) => {
+                      const values = leaveRangeToFormValues(range)
+                      form.setValue('start_date', values.start_date, { shouldValidate: true })
+                      form.setValue('end_date', values.end_date, { shouldValidate: true })
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+              <FieldError id={`${id}-leave-dates-error`} errors={[errors.start_date, errors.end_date]} />
+            </Field>
             <div className="flex justify-end gap-2">
               <Button
                 type="button"

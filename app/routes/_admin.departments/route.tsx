@@ -5,7 +5,7 @@ import DepartmentList from './department-list'
 
 export default function Route() {
   const [page, setPage] = useState(1)
-  const { data, loading, error, refetch } = useGetDepartments({ first: 10, page })
+  const { data, loading, error, refetch } = useGetDepartments({ first: 40, page })
 
   const refreshDepartments = async () => {
     await refetch()

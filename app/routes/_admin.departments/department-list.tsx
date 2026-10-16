@@ -52,21 +52,21 @@ export default function DepartmentList({ departments, loading, error, page, onPa
                     {departments.data.map(department => (
                       <article
                         key={department.id}
-                        className="min-h-68 rounded-lg border"
+                        className="min-h-44 rounded-lg border"
                       >
-                        <div className="flex items-center justify-center">
+                        {/* <div className="flex items-center justify-center">
                           <Image
                             aria-hidden="true"
                             className="size-42 object-contain text-gray-300"
                           />
-                        </div>
+                        </div> */}
                         <div className="space-y-4 p-4 wrap-break-word">
-                          <h2 className="text-lg font-semibold">{department.name}</h2>
-                          <p className="text-sm text-muted-foreground">
+                          <h2 className="h-10 text-lg font-semibold">{department.name}</h2>
+                          <p className="h-13 text-sm text-muted-foreground">
                             {department.description?.trim() || 'No description provided.'}
                           </p>
                         </div>
-                        <div>
+                        <div className="flex gap-2 px-4 pb-3">
                           <DepartmentUpdate dpt={department} onUpdated={onUpdated} />
                           <DepartmentDelete departM={department} onDeleted={onDeleted} />
                         </div>

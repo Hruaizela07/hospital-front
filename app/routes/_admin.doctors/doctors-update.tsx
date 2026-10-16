@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~
 import { UPDATE_DOCTOR } from '~/graphql/mutation/update-doctor'
 import { DEPARTMENTS_QUERY } from '~/graphql/query/departments'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
-import { DOCTOR_LEAVE_STATUS_OPTIONS, DOCTOR_STATUS_OPTIONS, updateDoctorSchema } from './schema'
+import { DOCTOR_STATUS_OPTIONS, updateDoctorSchema } from './schema'
 
 interface Props {
   doctor: DoctorsQuery['doctors']['data'][number]
@@ -64,29 +64,8 @@ export default function DoctorsUpdate({ doctor, onUpdated }: Props) {
     ...(doctor.department ? [doctor.department] : []),
     ...(departments.data?.departments.data ?? []),
   ].map(item => [item.id, item])).values()]
-  const pagination = departments.data?.departments.paginatorInfo
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
-
-  const loadMoreDepartments = async () => {
-    if (!pagination)
-      return
-    try {
-      await departments.fetchMore({
-        variables: { page: pagination.currentPage + 1 },
-        updateQuery: (previous, { fetchMoreResult }) => ({
-          ...fetchMoreResult,
-          departments: {
-            ...fetchMoreResult.departments,
-            data: [...new Map([...previous.departments.data, ...fetchMoreResult.departments.data].map(item => [item.id, item])).values()],
-          },
-        }),
-      })
-    }
-    catch (error) {
-      toast.error(getSubmitErrorMessage(error, 'Could not load more departments.'))
-    }
-  }
 
   const onSubmit = async (values: UpdateDoctorFormValues) => {
     try {
@@ -203,9 +182,7 @@ export default function DoctorsUpdate({ doctor, onUpdated }: Props) {
                   {!departments.loading && !departments.error && !options.length && (
                     <p className="text-sm text-muted-foreground">Create a department before updating this doctor.</p>
                   )}
-                  {pagination && pagination.currentPage < pagination.lastPage && (
-                    <Button type="button" variant="outline" disabled={busy || departments.loading} onClick={loadMoreDepartments}>Load more departments</Button>
-                  )}
+
                 </Field>
               )}
             />

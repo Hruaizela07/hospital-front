@@ -86,8 +86,8 @@ export default function DepartmentUpdate({ onUpdated, dpt }: Props) {
       </DialogTrigger>
       <DialogContent showCloseButton={!busy}>
         <DialogHeader className="mb-6">
-          <DialogTitle>Add Department</DialogTitle>
-          <DialogDescription>Create a department with a name and an optional description.</DialogDescription>
+          <DialogTitle>Update Department</DialogTitle>
+          <DialogDescription>Update a department with a name and an optional description.</DialogDescription>
         </DialogHeader>
         <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
@@ -127,7 +127,7 @@ export default function DepartmentUpdate({ onUpdated, dpt }: Props) {
                 Cancel
               </Button>
               <Button type="submit" disabled={busy}>
-                {busy ? 'Creating...' : 'Create Department'}
+                {busy ? 'Updating...' : 'Update Department'}
               </Button>
             </div>
           </FieldGroup>

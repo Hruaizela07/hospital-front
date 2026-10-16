@@ -12,6 +12,7 @@ type Appointment {
   id: ID!
   notes: String
   patient: Patient
+  reason_for_visit: String!
   start_time: String!
   status: AppointmentStatus!
   updated_at: DateTime
@@ -57,6 +58,7 @@ input CreateAppointmentInput {
   end_time: String!
   notes: String
   patient_id: ID!
+  reason_for_visit: String!
   start_time: String!
   status: AppointmentStatus
 }
@@ -92,12 +94,16 @@ input CreateMonthlyShiftInput {
 }
 
 input CreatePatientInput {
-  date_of_birth: DateTime
-  email: String
-  gender: Gender
+  abha_id: String
+  address: String!
+  date_of_birth: DateTime!
+  district: District!
+  email: String!
+  gender: Gender!
+  marital_status: MaritalStatus!
   name: String!
-  phone: String
-  symptom: String!
+  phone: String!
+  weight: String
 }
 
 input CreateShiftInput {
@@ -148,6 +154,20 @@ type DepartmentPaginator {
   data: [Department!]!
   """Pagination information about the list of items."""
   paginatorInfo: PaginatorInfo!
+}
+
+enum District {
+  AIZAWL
+  CHAMPHAI
+  HNAHTHIAL
+  KHAWZAWL
+  KOLASIB
+  LAWNGTLAI
+  LUNGLEI
+  MAMIT
+  OTHER
+  SAITUAL
+  SIAHA
 }
 
 type Doctor {
@@ -240,6 +260,11 @@ enum Gender {
   OTHER
 }
 
+enum MaritalStatus {
+  MARRIED
+  SINGLE
+}
+
 type Mutation {
   createAppointment(input: CreateAppointmentInput!): Appointment!
   createDepartment(input: CreateDepartmentInput!): Department!
@@ -257,6 +282,7 @@ type Mutation {
   deletePatient(id: ID!): Boolean!
   login(password: String!, userName: String!): User!
   logout: Boolean!
+  requestPublicBookingOtp(input: RequestPublicBookingOtpInput!): PublicBookingOtpChallenge!
   updateAppointment(id: ID!, input: UpdateAppointmentInput!): Appointment!
   updateDepartment(id: ID!, input: UpdateDepartmentInput!): Department!
   updateDoctor(id: ID!, input: UpdateDoctorInput!): Doctor!
@@ -264,6 +290,19 @@ type Mutation {
   updateDoctorLeave(id: ID!, input: UpdateDoctorLeaveInput!): DoctorLeave!
   updatePassword(id: ID!, input: ChangePasswordInput!): Doctor!
   updatePatient(id: ID!, input: UpdatePatientInput!): Patient!
+}
+
+input NewPublicPatientInput {
+  abha_id: String
+  address: String!
+  date_of_birth: DateTime!
+  district: District!
+  email: String!
+  gender: Gender!
+  marital_status: MaritalStatus!
+  name: String!
+  phone: String!
+  weight: String
 }
 
 """Allows ordering a list of records."""
@@ -319,16 +358,20 @@ type PaginatorInfo {
 }
 
 type Patient {
+  abha_id: String
+  address: String
   created_at: DateTime
   date_of_birth: DateTime
   department: Department
+  district: String
   email: String
   gender: Gender
   id: ID!
+  marital_status: String
   name: String!
   phone: String
-  symptom: String
   updated_at: DateTime
+  weight: String
 }
 
 input PatientFilterInput {
@@ -350,6 +393,11 @@ type PatientPaginator {
   data: [Patient!]!
   """Pagination information about the list of items."""
   paginatorInfo: PaginatorInfo!
+}
+
+type PublicBookingOtpChallenge {
+  challenge_id: ID!
+  expires_at: DateTime!
 }
 
 type Query {
@@ -404,6 +452,11 @@ type Query {
   ): PatientPaginator!
 }
 
+input RequestPublicBookingOtpInput {
+  department_id: ID!
+  patient: NewPublicPatientInput!
+}
+
 """Directions for ordering a list of records."""
 enum SortOrder {
   """Sort records in ascending order."""
@@ -430,6 +483,7 @@ input UpdateAppointmentInput {
   end_time: String
   notes: String
   patient_id: ID
+  reason_for_visit: String
   start_time: String
   status: AppointmentStatus
 }
@@ -454,12 +508,16 @@ input UpdateDoctorLeaveInput {
 }
 
 input UpdatePatientInput {
+  abha_id: String
+  address: String
   date_of_birth: DateTime
+  district: District
   email: String
   gender: Gender
+  marital_status: MaritalStatus
   name: String
   phone: String
-  symptom: String
+  weight: String
 }
 
 input UpdateShiftInput {

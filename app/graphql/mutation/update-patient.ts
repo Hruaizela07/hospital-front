@@ -5,11 +5,19 @@ export const UPDATE_PATIENT = gql(`
   updatePatient(input: $input, id: $id) {
     id
     name
-    symptom
     email
     phone
     gender
+    department {
+      id
+      name
+    }
+    weight
     date_of_birth
+    abha_id
+    address
+    district
+    marital_status
     created_at
     updated_at
   }

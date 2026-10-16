@@ -7,7 +7,6 @@ export const CREATE_APPOINTMENT = gql(`
     patient {
       id
       name
-      symptom
     }
     doctor {
       id
@@ -20,6 +19,7 @@ export const CREATE_APPOINTMENT = gql(`
     start_time
     end_time
     duration_minutes
+    reason_for_visit
     status
     notes
     created_at
