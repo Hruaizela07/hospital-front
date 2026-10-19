@@ -70,6 +70,7 @@ input CreateDepartmentInput {
 
 input CreateDoctorInput {
   department_id: ID!
+  doctorID: String
   email: String!
   image: Upload
   password: String!
@@ -108,9 +109,10 @@ input CreatePatientInput {
 
 input CreateShiftInput {
   doctor_id: ID!
-  duty_date: Date!
+  duty_date: Date
   end_time: String!
   start_time: String!
+  weekdays: [Int!]! = [1, 2, 3, 4, 5]
 }
 
 scalar Date
@@ -173,6 +175,7 @@ enum District {
 type Doctor {
   created_at: DateTime
   department: Department
+  doctorID: String
   email: String
   id: ID!
   image: DoctorImage
@@ -192,6 +195,7 @@ type DoctorDutyShift {
 }
 
 input DoctorDutyShiftFilterInput {
+  department_id: ID
   doctor_id: ID
   duty_date: Date
   from_date: Date
@@ -269,7 +273,7 @@ type Mutation {
   createAppointment(input: CreateAppointmentInput!): Appointment!
   createDepartment(input: CreateDepartmentInput!): Department!
   createDoctor(input: CreateDoctorInput!): Doctor!
-  createDoctorDutyShift(input: CreateShiftInput!): DoctorDutyShift!
+  createDoctorDutyShift(input: CreateShiftInput!): [DoctorDutyShift!]!
   createDoctorDutyShiftsForMonth(input: CreateMonthlyShiftInput!): [DoctorDutyShift!]!
   createDoctorLeave(input: CreateDoctorLeaveInput!): DoctorLeave!
   createPatient(input: CreatePatientInput!): Patient!
@@ -287,6 +291,7 @@ type Mutation {
   updateDepartment(id: ID!, input: UpdateDepartmentInput!): Department!
   updateDoctor(id: ID!, input: UpdateDoctorInput!): Doctor!
   updateDoctorDutyShift(id: ID!, input: UpdateShiftInput!): DoctorDutyShift!
+  updateDoctorDutyShiftWeek(id: ID!, input: UpdateShiftWeekInput!): [DoctorDutyShift!]!
   updateDoctorLeave(id: ID!, input: UpdateDoctorLeaveInput!): DoctorLeave!
   updatePassword(id: ID!, input: ChangePasswordInput!): Doctor!
   updatePatient(id: ID!, input: UpdatePatientInput!): Patient!
@@ -495,6 +500,7 @@ input UpdateDepartmentInput {
 
 input UpdateDoctorInput {
   department_id: ID!
+  doctorID: String
   email: String
   image: Upload
   specialization: String
@@ -525,6 +531,12 @@ input UpdateShiftInput {
   duty_date: Date
   end_time: String
   start_time: String
+}
+
+input UpdateShiftWeekInput {
+  end_time: String
+  start_time: String
+  weekdays: [Int!]!
 }
 
 scalar Upload

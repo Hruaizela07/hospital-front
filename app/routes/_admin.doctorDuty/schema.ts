@@ -3,6 +3,8 @@ import z from 'zod'
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 const TIME_REGEX = /^\d{2}:\d{2}(?::\d{2})?$/
 
+export const FULL_WEEKDAYS = [1, 2, 3, 4, 5] as const
+
 const dutyTimeSchema = z
   .string()
   .regex(TIME_REGEX, 'Time is required')
@@ -10,7 +12,7 @@ const dutyTimeSchema = z
 
 export const dutySchema = z.object({
   doctor_id: z.string().min(1, 'Doctor is required'),
-  duty_date: z.string().regex(DATE_REGEX, 'Date is required'),
+  weekdays: z.array(z.number().int().min(1).max(7)).min(1, 'Select at least one day'),
   start_time: dutyTimeSchema,
   end_time: dutyTimeSchema,
 })
@@ -46,3 +48,13 @@ export const updateDutySchema = z.object({
 
 export type updateDoctorDutyForm = z.infer<typeof updateDutySchema>
 export type updateDoctorDutyInput = z.input<typeof updateDutySchema>
+
+export const updateDutyWeekSchema = z.object({
+  id: z.string().min(1, 'Duty shift is required'),
+  weekdays: z.array(z.number().int().min(1).max(5)).min(1, 'Select at least one weekday'),
+  start_time: dutyTimeSchema,
+  end_time: dutyTimeSchema,
+})
+
+export type updateDutyWeekForm = z.infer<typeof updateDutyWeekSchema>
+export type updateDutyWeekInput = z.input<typeof updateDutyWeekSchema>

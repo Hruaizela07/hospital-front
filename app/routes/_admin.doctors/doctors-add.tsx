@@ -27,6 +27,7 @@ function toInputMutation(values: DoctorFormValues): CreateDoctorInput {
     specialization: values.specialization,
     status: values.status,
     image: values.image,
+    doctorID: values.doctorID,
     department_id: values.department_Id,
   }
 }
@@ -44,6 +45,7 @@ export default function DoctorsAdd({ onCreated }: Props) {
       specialization: '',
       department_Id: '',
       status: 'ACTIVE',
+      doctorID: '',
       leave_status: DOCTOR_LEAVE_STATUS_OPTIONS[0].value,
     },
   })
@@ -103,6 +105,7 @@ export default function DoctorsAdd({ onCreated }: Props) {
               { name: 'userName', label: 'Name', type: 'text', autoComplete: 'name' },
               { name: 'password', label: 'Password', type: 'password', autoComplete: 'new-password' },
               { name: 'email', label: 'Email', type: 'email', autoComplete: 'email' },
+              { name: 'doctorID', label: 'Doctor ID', type: 'text', autoComplete: 'off' },
               { name: 'specialization', label: 'Specialization', type: 'text', autoComplete: 'off' },
             ] as const).map(field => (
               <Field key={field.name} data-invalid={!!errors[field.name]}>

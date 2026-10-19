@@ -20,6 +20,7 @@ export const DOCTORS_QUERY = gql(`
       specialization
       status
       leave_status
+      doctorID
       created_at
       updated_at
     }

@@ -111,7 +111,7 @@ export default function DoctorLeaveAdd({ onCreated }: Props) {
               name="doctor_id"
               render={({ field }) => (
                 <Field data-invalid={!!errors.doctor_id}>
-                  <FieldLabel htmlFor={`${id}-doctor`}>Doctor</FieldLabel>
+                  <FieldLabel>Doctor</FieldLabel>
                   <Select
                     items={doctorOptions.map(doctor => ({ value: doctor.id, label: `${doctor.userName} Dept:${doctor.department?.name ?? 'No department'}` }))}
                     value={field.value || null}
@@ -169,7 +169,7 @@ export default function DoctorLeaveAdd({ onCreated }: Props) {
               )}
             />
             <Field data-invalid={!!errors.start_date || !!errors.end_date}>
-              <FieldLabel htmlFor={`${id}-leave-dates`}>Leave dates</FieldLabel>
+              <FieldLabel>Leave dates</FieldLabel>
               <Popover>
                 <PopoverTrigger
                   render={(

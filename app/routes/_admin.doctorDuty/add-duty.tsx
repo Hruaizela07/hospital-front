@@ -2,9 +2,7 @@ import type { doctorDutyAddForm, doctorDutyAddInput } from './schema'
 import type { CreateDoctorDutyShiftMutation, CreateDoctorDutyShiftMutationVariables, DoctorsQuery, DoctorsQueryVariables } from '~/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { format, isValid, parse } from 'date-fns'
-import { de } from 'date-fns/locale'
-import { CalendarIcon } from 'lucide-react'
+import { format } from 'date-fns'
 import { useId, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -13,35 +11,30 @@ import { Calendar } from '~/components/ui/calendar'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 import { CREATE_DOCTOR_DUTY_SHIFT } from '~/graphql/mutation/create-doctor-duty-shift'
 import { DOCTORS_QUERY } from '~/graphql/query/doctors'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
-import { cn } from '~/lib/utils'
-import { dutySchema } from './schema'
+import { dutySchema, FULL_WEEKDAYS } from './schema'
 
 interface Props {
-  onCreated?: (duty: CreateDoctorDutyShiftMutation['createDoctorDutyShift']) => void | Promise<void>
+  onCreated?: (duties: CreateDoctorDutyShiftMutation['createDoctorDutyShift']) => void | Promise<void>
 }
 
-function dateFromFormValue(value?: string) {
-  if (!value)
-    return undefined
-
-  const date = parse(value, 'yyyy-MM-dd', new Date())
-
-  return isValid(date) ? date : undefined
+function weekdayFromDate(date: Date) {
+  return date.getDay() || 7
 }
 
 export default function AddDuty({ onCreated }: Props) {
   const [open, setOpen] = useState(false)
+  const [useCustomDays, setUseCustomDays] = useState(false)
+  const [customDates, setCustomDates] = useState<Date[]>([])
   const id = useId()
   const form = useForm<doctorDutyAddInput, unknown, doctorDutyAddForm>({
     resolver: zodResolver(dutySchema),
     defaultValues: {
       doctor_id: '',
-      duty_date: '',
+      weekdays: [...FULL_WEEKDAYS],
       end_time: '',
       start_time: '',
     },
@@ -58,8 +51,14 @@ export default function AddDuty({ onCreated }: Props) {
   const { errors, isSubmitting } = form.formState
   const busy = loading || isSubmitting
 
+  const resetForm = () => {
+    form.reset()
+    setUseCustomDays(false)
+    setCustomDates([])
+  }
+
   const onSubmit = async (values: doctorDutyAddForm) => {
-    let createdDuty: CreateDoctorDutyShiftMutation['createDoctorDutyShift']
+    let createdDuties: CreateDoctorDutyShiftMutation['createDoctorDutyShift']
 
     try {
       const response = await createDuty({ variables: { input: values } })
@@ -67,19 +66,19 @@ export default function AddDuty({ onCreated }: Props) {
         toast.error('Duty shift could not be created. Please try again.')
         return
       }
-      createdDuty = response.data.createDoctorDutyShift
+      createdDuties = response.data.createDoctorDutyShift
     }
     catch (error) {
       toast.error(getSubmitErrorMessage(error))
       return
     }
 
-    form.reset()
+    resetForm()
     setOpen(false)
     toast.success('Duty shift created successfully')
 
     try {
-      await onCreated?.(createdDuty)
+      await onCreated?.(createdDuties)
     }
     catch {
       toast.error('Duty shift was created, but refreshing failed. Please reload the page.')
@@ -92,7 +91,7 @@ export default function AddDuty({ onCreated }: Props) {
       onOpenChange={(nextOpen) => {
         if (busy)
           return
-        form.reset()
+        resetForm()
         setOpen(nextOpen)
       }}
     >
@@ -169,47 +168,61 @@ export default function AddDuty({ onCreated }: Props) {
             />
             <Controller
               control={form.control}
-              name="duty_date"
-              render={({ field }) => {
-                const selectedDate = dateFromFormValue(field.value)
+              name="weekdays"
+              render={({ field }) => (
+                <Field data-invalid={!!errors.weekdays}>
+                  <FieldLabel>Duty days</FieldLabel>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={!useCustomDays ? 'default' : 'outline'}
+                      disabled={busy}
+                      onClick={() => {
+                        setUseCustomDays(false)
+                        setCustomDates([])
+                        field.onChange([...FULL_WEEKDAYS])
+                      }}
+                    >
+                      Full weekdays
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={useCustomDays ? 'default' : 'outline'}
+                      disabled={busy}
+                      onClick={() => {
+                        setUseCustomDays(true)
+                        setCustomDates([])
+                        field.onChange([])
+                      }}
+                    >
+                      Custom days
+                    </Button>
+                  </div>
+                  {!useCustomDays
+                    ? <p className="text-sm text-muted-foreground">Monday through Friday will be scheduled.</p>
+                    : (
+                        <div className="rounded-md border p-2">
+                          <Calendar
+                            mode="multiple"
+                            selected={customDates}
+                            onSelect={(dates) => {
+                              const selectedDates = dates ?? []
+                              const weekdays = [...new Set(selectedDates.map(weekdayFromDate))].sort((first, second) => first - second)
 
-                return (
-                  <Field data-invalid={!!errors.duty_date}>
-                    <FieldLabel htmlFor={`${id}-duty_date`}>Duty Date</FieldLabel>
-                    <Popover>
-                      <PopoverTrigger
-                        render={(
-                          <Button
-                            id={`${id}-duty_date`}
-                            type="button"
-                            variant="outline"
-                            disabled={busy}
-                            aria-invalid={!!errors.duty_date}
-                            aria-describedby={errors.duty_date ? `${id}-duty_date-error` : undefined}
-                            className={cn(
-                              'w-full justify-start text-left font-normal',
-                              !field.value && 'text-muted-foreground',
-                            )}
+                              setCustomDates(selectedDates)
+                              field.onChange(weekdays)
+                            }}
                           />
-                        )}
-                      >
-                        <CalendarIcon className="size-4" />
-                        {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={(date) => {
-                            field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FieldError id={`${id}-duty_date-error`} errors={[errors.duty_date]} />
-                  </Field>
-                )
-              }}
+                          <p className="px-3 text-sm text-muted-foreground">
+                            {field.value.length
+                              ? `${field.value.map(weekday => format(new Date(2023, 0, weekday + 1), 'EEEE')).join(', ')} selected`
+                              : 'Select one or more calendar days.'}
+                          </p>
+                        </div>
+                      )}
+                  <FieldError id={`${id}-weekdays-error`} errors={[errors.weekdays]} />
+                </Field>
+              )}
             />
             {([
               { name: 'start_time', label: 'Start Time', type: 'time' },
@@ -235,7 +248,7 @@ export default function AddDuty({ onCreated }: Props) {
                 variant="outline"
                 disabled={busy}
                 onClick={() => {
-                  form.reset()
+                  resetForm()
                   setOpen(false)
                 }}
               >
