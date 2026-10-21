@@ -23,6 +23,7 @@ export const APPOINTMENTS_QUERY = gql(`
         image {
           id
           path
+          url
         }
         specialization
       }

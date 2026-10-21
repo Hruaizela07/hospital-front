@@ -1,6 +1,7 @@
 import type { ApolloError } from '@apollo/client'
 import type { DepartmentsQuery } from '~/gql/graphql'
 import { Image } from 'lucide-react'
+import AppPagination from '~/components/ui/app-pagination'
 import { Button } from '~/components/ui/button'
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
 import DepartmentDelete from './department-delete'
@@ -74,27 +75,12 @@ export default function DepartmentList({ departments, loading, error, page, onPa
                     ))}
                   </div>
                 )}
-      {(lastPage > 1 || page > 1) && (
-        <nav
-          aria-label="Department pagination"
-          className="flex items-center justify-center gap-4"
-        >
-          <Button type="button" variant="outline" disabled={loading || page <= 1} onClick={() => onPageChange(page - 1)}>
-            Previous
-          </Button>
-          <span className="text-sm">
-            Page
-            {' '}
-            {page}
-            {' '}
-            of
-            {' '}
-            {Math.max(page, lastPage)}
-          </span>
-          <Button type="button" variant="outline" disabled={loading || !!error || page >= lastPage} onClick={() => onPageChange(page + 1)}>
-            Next
-          </Button>
-        </nav>
+      {!loading && !error && (lastPage > 1 || page > 1) && (
+        <AppPagination
+          currentPage={page}
+          handlePagePagination={onPageChange}
+          lastPage={Math.max(page, lastPage)}
+        />
       )}
     </div>
   )

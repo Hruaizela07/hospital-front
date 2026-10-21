@@ -89,11 +89,12 @@ export default function Login() {
 
     >
       <div className="
-        mx-auto flex min-w-90 flex-col items-center justify-center
+        mx-auto flex min-w-72 flex-col items-center justify-center
       "
       >
-        <h1>Welcome Back</h1>
-        <p>Login to continue</p>
+        <img src="/logo2.png" className="size-20" />
+        <h1 className="font-semibold">Welcome Back</h1>
+        <p className="font-semibold">Login to continue</p>
         <div className="w-full">
           {error && (
             <p className="text-sm text-destructive">

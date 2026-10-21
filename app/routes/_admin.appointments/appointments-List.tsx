@@ -186,22 +186,31 @@ export default function AppointmentsList() {
           {filteredAppointments.map(aptms => (
             <article
               key={aptms.id}
-              className="space-y-3 rounded-lg border p-4 wrap-break-word"
+              className="space-y-3 rounded-lg border wrap-break-word"
             >
-              <dl className="border-b-2">
+              <div className="h-44">
+                {aptms.doctor?.image?.url && (
+                  <img
+                    src={aptms.doctor.image.url}
+                    alt={`Photo of ${aptms.doctor.userName}`}
+                    className="size-full object-cover"
+                  />
+                )}
+              </div>
+              <dl className="border-b-2 px-2">
                 <dt>Doctor</dt>
                 <h3 className="text-lg font-semibold">{aptms.doctor?.userName}</h3>
                 <dt>Department</dt>
                 <h3 className="text-lg font-semibold">{aptms.doctor?.department?.name}</h3>
               </dl>
-              <dl className="space-y-3 text-sm">
+              <dl className="space-y-3 px-2 text-sm">
                 <div>
                   <dt className="text-muted-foreground">Patient Name</dt>
                   <dd>{aptms.patient?.name?.trim() || 'Not provided'}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Symptom</dt>
-                  <dd>{aptms.patient?.symptom?.trim() || 'Not provided'}</dd>
+                  <dt className="text-muted-foreground">Reason of Visit</dt>
+                  <dd>{aptms.reason_for_visit?.trim() || 'Not provided'}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Email</dt>
@@ -240,7 +249,7 @@ export default function AppointmentsList() {
                   <dd>{aptms.notes?.trim() || 'No notes'}</dd>
                 </div>
               </dl>
-              <div className="flex gap-2">
+              <div className="flex gap-2 p-2">
                 <AppointmentUpdate appointment={aptms} onUpdated={refreshAppointments} />
                 <AppointmentDelete
                   aptm={{ id: aptms.id, name: `${aptms.patient?.name ?? 'appointment'} with ${aptms.doctor?.userName ?? 'doctor'}` }}

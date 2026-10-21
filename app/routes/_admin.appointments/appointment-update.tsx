@@ -1,11 +1,11 @@
 import type { AptmUpFormInput, AptmUpFormValue } from './schema'
-import type { AppointmentsQuery, DoctorsQuery, DoctorsQueryVariables, PatientsQuery, PatientsQueryVariables, UpdateAppointmentInput, UpdateAppointmentMutation, UpdateAppointmentMutationVariables } from '~/gql/graphql'
+import type { AppointmentsQuery, DoctorDutyShiftsQuery, DoctorDutyShiftsQueryVariables, DoctorsQuery, DoctorsQueryVariables, PatientsQuery, PatientsQueryVariables, UpdateAppointmentInput, UpdateAppointmentMutation, UpdateAppointmentMutationVariables } from '~/gql/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format, isValid, parse } from 'date-fns'
 import { CalendarIcon, CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '~/components/ui/button'
 import { Calendar } from '~/components/ui/calendar'
@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
 import { UPDATE_APPOINTMENT } from '~/graphql/mutation/update-appointment'
+import { DOCTOR_DUTY_SHIFT_QUERY } from '~/graphql/query/doctor-duty-shift'
 import { DOCTORS_QUERY } from '~/graphql/query/doctors'
 import { PATIENTS_QUERY } from '~/graphql/query/patients'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
@@ -47,6 +48,11 @@ function matchesSearch(search: string, values: Array<string | null | undefined>)
     return true
 
   return values.some(value => value?.toLowerCase().includes(query))
+}
+
+function formatDutyTime(time: string) {
+  const parsed = parse(time.slice(0, 5), 'HH:mm', new Date())
+  return isValid(parsed) ? format(parsed, 'h:mm a') : time
 }
 
 function toUpdateInput(values: AptmUpFormValue): UpdateAppointmentInput {
@@ -82,6 +88,8 @@ export default function AppointmentUpdate({ appointment, onUpdated }: Props) {
     resolver: zodResolver(aptmUpSchema),
     defaultValues: defaults,
   })
+  const selectedDoctorId = useWatch({ control: form.control, name: 'doctor_id' })
+  const selectedDutyDate = useWatch({ control: form.control, name: 'appointment_date' })?.split(DATE_TIME_SEPARATOR)[0]
   const patients = useQuery<PatientsQuery, PatientsQueryVariables>(PATIENTS_QUERY, {
     variables: { filter: {}, first: 100, page: 1 },
     skip: !open,
@@ -94,13 +102,18 @@ export default function AppointmentUpdate({ appointment, onUpdated }: Props) {
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   })
+  const dutyShifts = useQuery<DoctorDutyShiftsQuery, DoctorDutyShiftsQueryVariables>(DOCTOR_DUTY_SHIFT_QUERY, {
+    variables: { filter: { doctor_id: selectedDoctorId, duty_date: selectedDutyDate }, first: 100, page: 1 },
+    skip: !open || !selectedDoctorId || !selectedDutyDate,
+    fetchPolicy: 'network-only',
+  })
   const [updateAppointment, { loading }] = useMutation<UpdateAppointmentMutation, UpdateAppointmentMutationVariables>(UPDATE_APPOINTMENT)
   const patientData = patients.data?.patients.data
   const doctorData = doctors.data?.doctors.data
   const patientOptions = useMemo(() => patientData ?? [], [patientData])
   const doctorOptions = useMemo(() => doctorData ?? [], [doctorData])
   const filteredPatientOptions = useMemo(() => (
-    patientOptions.filter(patient => matchesSearch(patientSearch, [patient.name, patient.symptom]))
+    patientOptions.filter(patient => matchesSearch(patientSearch, [patient.name]))
   ), [patientOptions, patientSearch])
   const filteredDoctorOptions = useMemo(() => (
     doctorOptions.filter(doctor => matchesSearch(doctorSearch, [doctor.userName, doctor.department?.name]))
@@ -189,11 +202,14 @@ export default function AppointmentUpdate({ appointment, onUpdated }: Props) {
                       )}
                       >
                         { selectedPatient
-                          ? `${selectedPatient.name} - ${selectedPatient.symptom}`
+                          ? `${selectedPatient.name}`
                           : 'Select a Patient'}
                         <ChevronsUpDownIcon className="size-4 opacity-50" />
                       </PopoverTrigger>
-                      <PopoverContent align="start" className="w-(--anchor-width) p-2">
+                      <PopoverContent
+                        align="start"
+                        className="w-(--anchor-width) p-2"
+                      >
                         <Input
                           type="search"
                           value={patientSearch}
@@ -224,24 +240,37 @@ export default function AppointmentUpdate({ appointment, onUpdated }: Props) {
                             >
                               <span>
                                 {patient.name}
-                                <span className="text-sm text-muted-foreground">
-                                  {' '}
-                                  Symptom:
-                                  {' '}
-                                  {patient.symptom ?? 'No symptom'}
-                                </span>
                               </span>
                             </Button>
                           ))}
                           {!filteredPatientOptions.length && (
-                            <p className="px-2 py-1.5 text-sm text-muted-foreground">No Patient match your search.</p>
+                            <p className="
+                              px-2 py-1.5 text-sm text-muted-foreground
+                            "
+                            >
+                              No Patient match your search.
+                            </p>
                           )}
                         </div>
                       </PopoverContent>
                     </Popover>
                     <FieldError id={`${id}-patient-error`} errors={[errors.patient_id]} />
-                    {patients.loading && <p role="status" className="text-sm text-muted-foreground">Loading patients...</p>}
-                    {patients.error && <p role="alert" className="text-sm text-destructive">Could not load patients.</p>}
+                    {patients.loading && (
+                      <p
+                        role="status"
+                        className="text-sm text-muted-foreground"
+                      >
+                        Loading patients...
+                      </p>
+                    )}
+                    {patients.error && (
+                      <p
+                        role="alert"
+                        className="text-sm text-destructive"
+                      >
+                        Could not load patients.
+                      </p>
+                    )}
                     {!patients.loading && !patients.error && !patientOptions.length && (
                       <p className="text-sm text-muted-foreground">Create a patient before adding an appointment.</p>
                     )}
@@ -282,7 +311,10 @@ export default function AppointmentUpdate({ appointment, onUpdated }: Props) {
                           : 'Select a doctor'}
                         <ChevronsUpDownIcon className="size-4 opacity-50" />
                       </PopoverTrigger>
-                      <PopoverContent align="start" className="w-(--anchor-width) p-2">
+                      <PopoverContent
+                        align="start"
+                        className="w-(--anchor-width) p-2"
+                      >
                         <Input
                           type="search"
                           value={doctorSearch}
@@ -324,18 +356,39 @@ export default function AppointmentUpdate({ appointment, onUpdated }: Props) {
                                   </span>
                                 </span>
                               </span>
-                              {doctor.id === field.value && <CheckIcon className="size-4" />}
+                              {doctor.id === field.value && (
+                                <CheckIcon className="size-4" />
+                              )}
                             </button>
                           ))}
                           {!filteredDoctorOptions.length && (
-                            <p className="px-2 py-1.5 text-sm text-muted-foreground">No doctors match your search.</p>
+                            <p className="
+                              px-2 py-1.5 text-sm text-muted-foreground
+                            "
+                            >
+                              No doctors match your search.
+                            </p>
                           )}
                         </div>
                       </PopoverContent>
                     </Popover>
                     <FieldError id={`${id}-doctor-error`} errors={[errors.doctor_id]} />
-                    {doctors.loading && <p role="status" className="text-sm text-muted-foreground">Loading doctors...</p>}
-                    {doctors.error && <p role="alert" className="text-sm text-destructive">Could not load doctors.</p>}
+                    {doctors.loading && (
+                      <p
+                        role="status"
+                        className="text-sm text-muted-foreground"
+                      >
+                        Loading doctors...
+                      </p>
+                    )}
+                    {doctors.error && (
+                      <p
+                        role="alert"
+                        className="text-sm text-destructive"
+                      >
+                        Could not load doctors.
+                      </p>
+                    )}
                     {!doctors.loading && !doctors.error && !doctorOptions.length && (
                       <p className="text-sm text-muted-foreground">Create a doctor before adding an appointment.</p>
                     )}
@@ -388,6 +441,24 @@ export default function AppointmentUpdate({ appointment, onUpdated }: Props) {
                 )
               }}
             />
+
+            {selectedDoctorId && selectedDutyDate && (
+              <div className="text-sm">
+                <p className="font-medium">Doctor timing on this day</p>
+                {dutyShifts.loading
+                  ? <p role="status" className="text-muted-foreground">Loading duty timing...</p>
+                  : dutyShifts.error
+                    ? <p role="alert" className="text-destructive">Could not load duty timing.</p>
+                    : (
+                        <p className="text-muted-foreground">
+                          {dutyShifts.data?.doctorDutyShifts.data
+                            .filter(shift => shift.doctor.id === selectedDoctorId && shift.duty_date.slice(0, 10) === selectedDutyDate)
+                            .map(shift => `${formatDutyTime(shift.start_time)} - ${formatDutyTime(shift.end_time)}`)
+                            .join(', ') || 'No duty timing is scheduled for this day.'}
+                        </p>
+                      )}
+              </div>
+            )}
 
             <div className="
               grid gap-3

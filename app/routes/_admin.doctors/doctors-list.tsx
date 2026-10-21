@@ -1,10 +1,11 @@
-import type { DoctorsQuery } from '~/gql/graphql'
+import type { DepartmentsQuery, DoctorsQuery } from '~/gql/graphql'
 import { SearchIcon, UserRound } from 'lucide-react'
 import { useId, useState } from 'react'
 import AppPagination from '~/components/ui/app-pagination'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
 import DoctorDelete from './doctor-delete'
 import DoctorsUpdate from './doctors-update'
@@ -15,8 +16,11 @@ interface Props {
   error?: Error
   page: number
   search: string
+  departmentId: string
+  departments: DepartmentsQuery['departments']['data']
   onPageChange: (page: number) => void
   onSearchChange: (search: string) => void
+  onDepartmentChange: (departmentId: string) => void
   onRetry: () => void
   onUpdated?: () => void | Promise<void>
   onDeleted: (id: string) => void | Promise<void>
@@ -51,28 +55,52 @@ export function DoctorPhoto({ url, name }: { url?: string, name: string }) {
   )
 }
 
-export default function DoctorsList({ doctors, loading, error, page, search, onPageChange, onSearchChange, onRetry, onUpdated, onDeleted }: Props) {
+export default function DoctorsList({ doctors, loading, error, page, search, departmentId, departments, onPageChange, onSearchChange, onDepartmentChange, onRetry, onUpdated, onDeleted }: Props) {
   const id = useId()
   const lastPage = Math.max(1, doctors?.paginatorInfo.lastPage ?? page)
 
   return (
     <div className="size-full min-h-190 space-y-6" aria-busy={loading}>
-      <div className="grid gap-2 rounded-lg border p-4">
-        <Label htmlFor={`${id}-search`}>Search</Label>
-        <div className="relative">
-          <SearchIcon className="
-            absolute top-1/2 left-3 size-4 -translate-y-1/2
-            text-muted-foreground
-          "
-          />
-          <Input
-            id={`${id}-search`}
-            type="search"
-            value={search}
-            onChange={event => onSearchChange(event.target.value)}
-            placeholder="Search doctors"
-            className="pl-9"
-          />
+      <div className="
+        grid gap-4 rounded-lg border p-4
+        sm:grid-cols-2
+      "
+      >
+        <div className="grid gap-2">
+          <Label htmlFor={`${id}-search`}>Search</Label>
+          <div className="relative">
+            <SearchIcon className="
+              absolute top-1/2 left-3 size-4 -translate-y-1/2
+              text-muted-foreground
+            "
+            />
+            <Input
+              id={`${id}-search`}
+              type="search"
+              value={search}
+              onChange={event => onSearchChange(event.target.value)}
+              placeholder="Search doctors"
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor={`${id}-department`}>Department</Label>
+          <Select
+            items={[{ value: 'all', label: 'All departments' }, ...departments.map(department => ({ value: department.id, label: department.name }))]}
+            value={departmentId || 'all'}
+            onValueChange={value => onDepartmentChange(value === 'all' ? '' : value ?? '')}
+          >
+            <SelectTrigger id={`${id}-department`} className="w-full">
+              <SelectValue placeholder="All departments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All departments</SelectItem>
+              {departments.map(department => (
+                <SelectItem key={department.id} value={department.id}>{department.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       {loading
@@ -89,8 +117,8 @@ export default function DoctorsList({ doctors, loading, error, page, search, onP
           : !doctors?.data.length
               ? (
                   <p role="status" className="text-sm text-muted-foreground">
-                    {search.trim()
-                      ? 'No doctors match your search.'
+                    {search.trim() || departmentId
+                      ? 'No doctors match your filters.'
                       : page === 1
                         ? 'No doctors yet. Add a doctor to get started.'
                         : 'No doctors on this page. Go back to the previous page.'}

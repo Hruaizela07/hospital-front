@@ -1,11 +1,11 @@
 import type { AptmFormInput, AptmFormValue } from './schema'
-import type { CreateAppointmentMutation, CreateAppointmentMutationVariables, DoctorsQuery, DoctorsQueryVariables, PatientsQuery, PatientsQueryVariables } from '~/gql/graphql'
-import { useMutation, useQuery } from '@apollo/client'
+import type { CreateAppointmentMutation, CreateAppointmentMutationVariables, DoctorDutyShiftsQuery, DoctorDutyShiftsQueryVariables, DoctorsQuery, DoctorsQueryVariables, PatientsQuery, PatientsQueryVariables } from '~/gql/graphql'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { format, isValid, parse } from 'date-fns'
+import { endOfWeek, format, isValid, parse, startOfWeek } from 'date-fns'
 import { CalendarIcon, CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '~/components/ui/button'
 import { Calendar } from '~/components/ui/calendar'
@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
 import { CREATE_APPOINTMENT } from '~/graphql/mutation/create-appointment'
+import { DOCTOR_DUTY_SHIFT_QUERY } from '~/graphql/query/doctor-duty-shift'
 import { DOCTORS_QUERY } from '~/graphql/query/doctors'
 import { PATIENTS_QUERY } from '~/graphql/query/patients'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
@@ -48,6 +49,7 @@ function matchesSearch(search: string, values: Array<string | null | undefined>)
 }
 
 export default function AppointmentAdd({ onCreated }: Props) {
+  const client = useApolloClient()
   const [open, setOpen] = useState(false)
   const [doctorSearch, setDoctorSearch] = useState('')
   const [doctorPopoverOpen, setDoctorPopoverOpen] = useState(false)
@@ -68,6 +70,10 @@ export default function AppointmentAdd({ onCreated }: Props) {
       status: APPOINTMENT_STATUS_OPTIONS[0].value,
     },
   })
+  const appointmentDate = useWatch({ control: form.control, name: 'appointment_date' })
+  const selectedDate = dateFromAppointmentValue(appointmentDate)
+  const weekStart = selectedDate ? format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd') : ''
+  const weekEnd = selectedDate ? format(endOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd') : ''
   const patients = useQuery<PatientsQuery, PatientsQueryVariables>(PATIENTS_QUERY, {
     variables: { filter: {}, first: 100, page: 1 },
     skip: !open,
@@ -80,14 +86,25 @@ export default function AppointmentAdd({ onCreated }: Props) {
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   })
+  const dutyShifts = useQuery<DoctorDutyShiftsQuery, DoctorDutyShiftsQueryVariables>(DOCTOR_DUTY_SHIFT_QUERY, {
+    variables: { filter: { from_date: weekStart, to_date: weekEnd }, first: 100, page: 1 },
+    skip: !open || !selectedDate,
+    fetchPolicy: 'network-only',
+  })
   const [createAppointment, { loading }] = useMutation<CreateAppointmentMutation, CreateAppointmentMutationVariables>(CREATE_APPOINTMENT)
   const patientData = patients.data?.patients.data
   const doctorData = doctors.data?.doctors.data
   const patientOptions = useMemo(() => patientData ?? [], [patientData])
   const doctorOptions = useMemo(() => doctorData ?? [], [doctorData])
+  const onDutyDoctorIds = useMemo(() => new Set(
+    dutyShifts.data?.doctorDutyShifts.data.map(shift => shift.doctor.id) ?? [],
+  ), [dutyShifts.data])
+  const onDutyDoctorOptions = useMemo(() => (
+    doctorOptions.filter(doctor => onDutyDoctorIds.has(doctor.id))
+  ), [doctorOptions, onDutyDoctorIds])
   const filteredDoctorOptions = useMemo(() => (
-    doctorOptions.filter(doctor => matchesSearch(doctorSearch, [doctor.userName, doctor.department?.name]))
-  ), [doctorOptions, doctorSearch])
+    onDutyDoctorOptions.filter(doctor => matchesSearch(doctorSearch, [doctor.userName, doctor.department?.name]))
+  ), [onDutyDoctorOptions, doctorSearch])
   const filteredPatientOptions = useMemo(() => (
     patientOptions.filter(patient => matchesSearch(patientSearch, [patient.name]))
   ), [patientOptions, patientSearch])
@@ -107,6 +124,22 @@ export default function AppointmentAdd({ onCreated }: Props) {
     let createdAppointment: CreateAppointmentMutation['createAppointment']
 
     try {
+      const duty = await client.query<DoctorDutyShiftsQuery, DoctorDutyShiftsQueryVariables>({
+        query: DOCTOR_DUTY_SHIFT_QUERY,
+        variables: {
+          filter: { doctor_id: values.doctor_id, duty_date: values.appointment_date },
+          first: 1,
+          page: 1,
+        },
+        fetchPolicy: 'network-only',
+      })
+      if (!duty.data?.doctorDutyShifts.data.some(shift => (
+        shift.doctor.id === values.doctor_id && shift.duty_date.slice(0, 10) === values.appointment_date
+      ))) {
+        toast.error('The selected doctor is not on duty on this day.')
+        return
+      }
+
       const response = await createAppointment({ variables: { Input: values } })
       if (!response.data?.createAppointment) {
         toast.error('Appointment could not be created. Please try again.')
@@ -185,6 +218,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
                           selected={selectedDate}
                           onSelect={(date) => {
                             field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+                            form.setValue('doctor_id', '')
                           }}
                         />
                       </PopoverContent>
@@ -330,7 +364,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
               control={form.control}
               name="doctor_id"
               render={({ field }) => {
-                const selectedDoctor = doctorOptions.find(doctor => doctor.id === field.value)
+                const selectedDoctor = onDutyDoctorOptions.find(doctor => doctor.id === field.value)
 
                 return (
                   <Field data-invalid={!!errors.doctor_id}>
@@ -342,7 +376,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
                             id={`${id}-doctor`}
                             type="button"
                             variant="outline"
-                            disabled={busy || doctors.loading || !doctorOptions.length}
+                            disabled={busy || doctors.loading || dutyShifts.loading || !selectedDate || !onDutyDoctorOptions.length}
                             aria-required="true"
                             aria-invalid={!!errors.doctor_id}
                             aria-describedby={errors.doctor_id ? `${id}-doctor-error` : undefined}
@@ -367,7 +401,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
                           value={doctorSearch}
                           onChange={event => setDoctorSearch(event.target.value)}
                           placeholder="Search doctors"
-                          disabled={busy || doctors.loading}
+                          disabled={busy || doctors.loading || dutyShifts.loading}
                         />
                         <div className="max-h-56 overflow-y-auto">
                           {filteredDoctorOptions.map(doctor => (
@@ -414,7 +448,7 @@ export default function AppointmentAdd({ onCreated }: Props) {
                                 px-2 py-1.5 text-sm text-muted-foreground
                               "
                             >
-                              No doctors match your search.
+                              No on-duty doctors match your search.
                             </p>
                           )}
                         </div>
@@ -428,6 +462,12 @@ export default function AppointmentAdd({ onCreated }: Props) {
                       >
                         Loading doctors...
                       </p>
+                    )}
+                    {dutyShifts.loading && selectedDate && (
+                      <p role="status" className="text-sm text-muted-foreground">Loading on-duty doctors...</p>
+                    )}
+                    {dutyShifts.error && (
+                      <p role="alert" className="text-sm text-destructive">Could not load doctor duty shifts.</p>
                     )}
                     {doctors.error && (
                       <p

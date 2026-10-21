@@ -1,6 +1,6 @@
 import type { updateDutyWeekForm, updateDutyWeekInput } from './schema'
-import type { DoctorDutyShiftsQuery, UpdateDoctorDutyShiftWeekMutation, UpdateDoctorDutyShiftWeekMutationVariables } from '~/gql/graphql'
-import { useMutation } from '@apollo/client'
+import type { DoctorDutyShiftsQuery, DoctorDutyShiftsQueryVariables, UpdateDoctorDutyShiftWeekMutation, UpdateDoctorDutyShiftWeekMutationVariables } from '~/gql/graphql'
+import { useApolloClient, useMutation } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addDays, format, parseISO, startOfWeek } from 'date-fns'
 import { useState } from 'react'
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Field, FieldError, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { UPDATE_DOCTOR_DUTY_SHIFT_WEEK } from '~/graphql/mutation/update-doctor-duty-shift-week'
+import { DOCTOR_DUTY_SHIFT_QUERY } from '~/graphql/query/doctor-duty-shift'
 import getSubmitErrorMessage from '~/lib/get-submit-error-message'
 import { FULL_WEEKDAYS, updateDutyWeekSchema } from './schema'
 
@@ -23,7 +24,9 @@ interface Props {
 }
 
 export default function UpdateDuty({ duty, onUpdated }: Props) {
+  const client = useApolloClient()
   const [open, setOpen] = useState(false)
+  const [loadingDays, setLoadingDays] = useState(false)
   const [daySelection, setDaySelection] = useState<'full' | 'custom' | null>(null)
   const [customDates, setCustomDates] = useState<Date[]>([])
   const weekStart = startOfWeek(parseISO(duty.duty_date), { weekStartsOn: 1 })
@@ -40,12 +43,47 @@ export default function UpdateDuty({ duty, onUpdated }: Props) {
   })
   const [updateWeek, { loading }] = useMutation<UpdateDoctorDutyShiftWeekMutation, UpdateDoctorDutyShiftWeekMutationVariables>(UPDATE_DOCTOR_DUTY_SHIFT_WEEK)
   const { errors, isSubmitting } = form.formState
-  const busy = loading || isSubmitting
+  const busy = loading || isSubmitting || loadingDays
 
   const resetForm = () => {
     form.reset(defaults)
     setDaySelection(null)
     setCustomDates([])
+  }
+
+  const loadExistingDays = async () => {
+    setLoadingDays(true)
+    try {
+      const response = await client.query<DoctorDutyShiftsQuery, DoctorDutyShiftsQueryVariables>({
+        query: DOCTOR_DUTY_SHIFT_QUERY,
+        variables: {
+          filter: {
+            doctor_id: duty.doctor.id,
+            from_date: format(weekStart, 'yyyy-MM-dd'),
+            to_date: format(weekEnd, 'yyyy-MM-dd'),
+          },
+          first: 100,
+          page: 1,
+        },
+        fetchPolicy: 'network-only',
+      })
+      const dates = response.data.doctorDutyShifts.data
+        .filter(shift => shift.doctor.id === duty.doctor.id)
+        .map(shift => parseISO(shift.duty_date))
+      const weekdays = [...new Set(dates.map(date => date.getDay() || 7))]
+        .sort((first, second) => first - second)
+
+      form.reset({ ...defaults, weekdays })
+      setCustomDates(dates)
+      setDaySelection(FULL_WEEKDAYS.every(day => weekdays.includes(day)) ? 'full' : 'custom')
+    }
+    catch (error) {
+      toast.error(getSubmitErrorMessage(error))
+      setOpen(false)
+    }
+    finally {
+      setLoadingDays(false)
+    }
   }
 
   const onSubmit = async (values: updateDutyWeekForm) => {
@@ -90,6 +128,8 @@ export default function UpdateDuty({ duty, onUpdated }: Props) {
           return
         resetForm()
         setOpen(nextOpen)
+        if (nextOpen)
+          void loadExistingDays()
       }}
     >
       <DialogTrigger render={<Button type="button" variant="outline" disabled={busy} />}>Edit</DialogTrigger>
@@ -203,7 +243,7 @@ export default function UpdateDuty({ duty, onUpdated }: Props) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy}>
+              <Button type="submit" disabled={busy || !form.getValues('weekdays').length}>
                 {busy ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>

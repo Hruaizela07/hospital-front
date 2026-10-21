@@ -169,6 +169,7 @@ enum District {
   MAMIT
   OTHER
   SAITUAL
+  SERCHHIP
   SIAHA
 }
 
@@ -287,6 +288,7 @@ type Mutation {
   login(password: String!, userName: String!): User!
   logout: Boolean!
   requestPublicBookingOtp(input: RequestPublicBookingOtpInput!): PublicBookingOtpChallenge!
+  submitPublicBooking(input: SubmitPublicBookingInput!): Appointment!
   updateAppointment(id: ID!, input: UpdateAppointmentInput!): Appointment!
   updateDepartment(id: ID!, input: UpdateDepartmentInput!): Department!
   updateDoctor(id: ID!, input: UpdateDoctorInput!): Doctor!
@@ -295,6 +297,7 @@ type Mutation {
   updateDoctorLeave(id: ID!, input: UpdateDoctorLeaveInput!): DoctorLeave!
   updatePassword(id: ID!, input: ChangePasswordInput!): Doctor!
   updatePatient(id: ID!, input: UpdatePatientInput!): Patient!
+  verifyPublicBookingOtp(input: VerifyPublicBookingOtpInput!): PublicBookingOtpVerification!
 }
 
 input NewPublicPatientInput {
@@ -400,9 +403,22 @@ type PatientPaginator {
   paginatorInfo: PaginatorInfo!
 }
 
+type PublicBookingDoctor {
+  department: Department
+  id: ID!
+  image: DoctorImage
+  leave_status: DoctorLeaveStatus!
+  specialization: String
+  userName: String!
+}
+
 type PublicBookingOtpChallenge {
   challenge_id: ID!
   expires_at: DateTime!
+}
+
+type PublicBookingOtpVerification {
+  booking_token: String!
 }
 
 type Query {
@@ -455,6 +471,9 @@ type Query {
     """The offset from which items are returned."""
     page: Int
   ): PatientPaginator!
+  publicBookingAvailableSlots(date: Date!, doctor_id: ID!): [AppointmentSlot!]!
+  publicBookingDoctors(department_id: ID!): [PublicBookingDoctor!]!
+  publicBookingDutyDates(doctor_id: ID!): [Date!]!
 }
 
 input RequestPublicBookingOtpInput {
@@ -468,6 +487,17 @@ enum SortOrder {
   ASC
   """Sort records in descending order."""
   DESC
+}
+
+input SubmitPublicBookingInput {
+  appointment_date: Date!
+  booking_token: String!
+  challenge_id: ID!
+  doctor_id: ID!
+  end_time: String!
+  notes: String
+  reason_for_visit: String!
+  start_time: String!
 }
 
 """
@@ -534,15 +564,17 @@ input UpdateShiftInput {
 }
 
 input UpdateShiftWeekInput {
+  doctor_id: ID
   end_time: String
   start_time: String
-  weekdays: [Int!]!
+  weekdays: [Int!]
 }
 
 scalar Upload
 
 type User {
   createdAt: DateTime
+  doctor: Doctor
   id: ID!
   lastLoginAt: DateTime
   role: UserRole!
@@ -553,4 +585,9 @@ type User {
 enum UserRole {
   ADMIN
   DOCTORS
+}
+
+input VerifyPublicBookingOtpInput {
+  challenge_id: ID!
+  code: String!
 }

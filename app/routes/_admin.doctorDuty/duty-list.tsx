@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~
 import getFriendlyErrorMessage from '~/lib/get-friendly-error-message'
 import DutyDelete from './duty-delete'
 import { groupDutiesByWeek } from './duty-week-groups'
-import UpdateDuty from './update-duty'
+import EditDutyTime from './edit-duty-time'
 
 export type DoctorDuty = DoctorDutyShiftsQuery['doctorDutyShifts']['data'][number]
 
@@ -20,6 +20,7 @@ const DUTY_TIME_REGEX = /^(\d{2}):(\d{2})(?::\d{2})?$/
 const ALL_DEPARTMENTS = 'all'
 
 interface Props {
+  isAdmin: boolean
   duties: DoctorDuty[]
   error?: ApolloError
   loading?: boolean
@@ -53,7 +54,7 @@ function timeInDuty(time: string, start: string, end: string) {
     : selected >= startTime || selected < endTime
 }
 
-export default function DutyList({ duties, loading = false, error, onRetry, onUpdated, onDeleted }: Props) {
+export default function DutyList({ duties, isAdmin, loading = false, error, onRetry, onUpdated, onDeleted }: Props) {
   const [doctorName, setDoctorName] = useState('')
   const [departmentId, setDepartmentId] = useState(ALL_DEPARTMENTS)
   const [todayDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
@@ -100,8 +101,16 @@ export default function DutyList({ duties, loading = false, error, onRetry, onUp
               )
             : (
                 <div className="space-y-6">
-                  <div className="flex flex-wrap items-end gap-3">
-                    <div className="min-w-48 flex-1 space-y-1">
+                  <div className="
+                    flex flex-col gap-3
+                    lg:flex-row lg:flex-wrap lg:items-end
+                  "
+                  >
+                    <div className="
+                      w-80 flex-1 space-y-1
+                      lg:min-w-80
+                    "
+                    >
                       <label
                         htmlFor="duty-doctor-filter"
                         className="text-sm font-medium"
@@ -115,7 +124,11 @@ export default function DutyList({ duties, loading = false, error, onRetry, onUp
                         placeholder="Search doctor"
                       />
                     </div>
-                    <div className="min-w-48 flex-1 space-y-1">
+                    <div className="
+                      w-80 flex-1 space-y-1
+                      lg:min-w-48
+                    "
+                    >
                       <label
                         htmlFor="duty-department-filter"
                         className="text-sm font-medium"
@@ -141,7 +154,11 @@ export default function DutyList({ duties, loading = false, error, onRetry, onUp
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="min-w-40 flex-1 space-y-1">
+                    <div className="
+                      w-80 flex-1 space-y-1
+                      lg:min-w-40
+                    "
+                    >
                       <label
                         htmlFor="duty-date-filter"
                         className="text-sm font-medium"
@@ -182,6 +199,10 @@ export default function DutyList({ duties, loading = false, error, onRetry, onUp
                       <Button
                         type="button"
                         variant="outline"
+                        className="
+                          w-80
+                          lg:w-full
+                        "
                         onClick={() => {
                           setDoctorName('')
                           setDepartmentId(ALL_DEPARTMENTS)
@@ -230,11 +251,8 @@ export default function DutyList({ duties, loading = false, error, onRetry, onUp
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex justify-end gap-2">
-                                    <UpdateDuty duty={duty} onUpdated={onUpdated} />
-                                    <DutyDelete
-                                      duty={{ id: duty.id, label: dutyLabel(duty) }}
-                                      onDeleted={() => onDeleted(duty.id)}
-                                    />
+                                    <EditDutyTime duty={duty} onUpdated={onUpdated} />
+                                    {isAdmin && <DutyDelete duty={{ id: duty.id, label: dutyLabel(duty) }} onDeleted={() => onDeleted(duty.id)} />}
                                   </div>
                                 </TableCell>
                               </TableRow>
