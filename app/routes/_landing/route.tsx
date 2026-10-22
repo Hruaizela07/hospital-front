@@ -10,16 +10,17 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 // import LoaderAnime from '~/routes/landing-loader/loader-anime'
 import { waitForLandingAssets } from './asset-readiness'
+import LandingTicker from './landing-ticker'
 import Video from './video'
 
 gsap.registerPlugin(useGSAP, Draggable, ScrollTrigger, SplitText)
 
-const carouselImages = [
-  { id: 'hospital', src: '/3274796391d671a82bc53c3035606c48.jpg' },
-  { id: 'house-one', src: '/landscape.jpg' },
-  { id: 'interior', src: '/cc.jpg' },
-  { id: 'house-two', src: '/house\'.jpg' },
-]
+// const carouselImages = [
+//   { id: 'hospital', txt: '/3274796391d671a82bc53c3035606c48.jpg' },
+//   { id: 'house-one', txt: '/landscape.jpg' },
+//   { id: 'interior', txt: '/cc.jpg' },
+//   { id: 'house-two', txt: '/house\'.jpg' },
+// ]
 
 export default function Landing() {
   const lenisRef = useRef<LenisRef>(null)
@@ -108,6 +109,22 @@ export default function Landing() {
         ease: 'power3.out',
         scrollTrigger: {
           trigger: select('[data-landing-secondary]')[0],
+          start: 'top 80%',
+          once: true,
+        },
+      })
+
+      gsap.fromTo(select('[data-landing-ticker-item]'), {
+        y: 24,
+        autoAlpha: 0,
+      }, {
+        y: 0,
+        autoAlpha: 1,
+        duration: 0.6,
+        stagger: 0.08,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: select('[data-landing-ticker]')[0],
           start: 'top 80%',
           once: true,
         },
@@ -256,19 +273,38 @@ export default function Landing() {
             </div>
           </section>
           <section
-            data-landing-secondary
-            className="
-              relative z-10 flex min-h-lvh w-full flex-col bg-[#FBE6C2]
-            "
+            className="relative z-4 min-h-lvh w-full bg-[#FBE6C2]"
           >
 
-            <div className="flex flex-col items-center justify-between">
+            <div className="flex min-h-lvh flex-col justify-between">
+              <LandingTicker />
 
-              <div>box 2</div>
               <div
+                className="
+                  flex min-h-120 w-full shrink-0 flex-col gap-8 px-6 py-16
+                  lg:flex-row lg:justify-between lg:gap-12 lg:px-16 lg:pt-40
+                  2xl:px-50 2xl:pt-44
+                "
+                data-landing-secondary
+              >
+                <h2 className="
+                  fontAnton text-4xl font-bold
+                  md:text-5xl
+                "
+                >
+                  EXPLORE OUR FACILITIES
+                </h2>
+                <p className="JetBrainsMono max-w-xl text-xl">
+                  Take a closer look at CHOA Arthur M. Blank Hospital through
+                  images of the spaces and facilities where children and
+                  families spend time.
+                </p>
+              </div>
+              <div
+                data-landing-secondary
                 ref={carouselRef}
                 className="
-                  w-full cursor-grab overflow-hidden
+                  w-full shrink-0 cursor-grab overflow-hidden
                   active:cursor-grabbing
                 "
                 aria-label="Hospital photo carousel; drag to browse"
@@ -281,21 +317,9 @@ export default function Landing() {
                     <div
                       key={copy}
                       ref={copy === 0 ? carouselGroupRef : undefined}
-                      className="flex shrink-0 border"
+                      className="flex shrink-0 items-baseline"
                       aria-hidden={copy === 1}
                     >
-                      {/* {carouselImages.map(image => (
-                        <img
-                          key={image.id}
-                          src={image.src}
-                          alt=""
-                          draggable={false}
-                          className="
-                            shrink-0 rounded-sm border-4 border-black
-                            object-cover
-                          "
-                        />
-                      ))} */}
                       <div className="mr-10 w-full">
                         <img
                           src="/3274796391d671a82bc53c3035606c48.jpg"
@@ -351,15 +375,30 @@ export default function Landing() {
             </div>
           </section>
           <section
-            className="relative z-10 flex h-screen w-full flex-col bg-red-400"
+            className="
+              relative flex h-screen w-full flex-col items-center justify-center
+              gap-10 bg-[#FBE6C2]
+            "
 
           >
-            <div
-              onClick={() => navigate('/appointment')}
-              className="p-7"
-            >
-              CLick
+
+            <div>
+              arrow down
             </div>
+
+            <div
+              className="flex size-full items-center justify-center"
+              style={{ backgroundImage: 'url(\'/Artificial-Green-Wall.png\')', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', borderRadius: '20px', objectFit: 'cover' }}
+            >
+
+              <div
+                onClick={() => navigate('/appointment')}
+                className="p-7"
+              >
+                CLick
+              </div>
+            </div>
+
           </section>
         </div>
       </div>
