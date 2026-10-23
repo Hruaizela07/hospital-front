@@ -397,6 +397,9 @@ export default function Landing() {
               >
                 CLick
               </div>
+              <div className="border" onClick={() => navigate('/gsap')}>
+                Gsap
+              </div>
             </div>
 
           </section>

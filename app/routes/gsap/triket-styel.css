@@ -1,0 +1,24 @@
+.circle-ground {
+    border: gray;
+    transform: scale(2, 0.2);
+    border-radius: 500px ;
+    }
+    
+.mint-triket {
+    transform: translateX(12px) rotateZ(-3deg);
+    }
+    
+.pink-triket {
+    transform: translateX(-6px) rotateZ(10deg);
+    }
+    
+.red-triket {
+    transform: translateX(-6px) rotateZ(4deg);
+    }
+
+.santa-hat {
+    transform: translateY(-160px) translateX(50px) rotateZ(10deg) scaleX(-1);
+}
+.box {
+    transform: rotateZ(-3deg)
+}
