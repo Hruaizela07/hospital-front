@@ -83,9 +83,7 @@ export default function Login() {
 
   return (
     <div
-      className="
-        flex min-h-screen w-screen flex-col items-center justify-center
-      "
+      className="flex min-h-screen w-full flex-col items-center justify-center"
 
     >
       <div className="

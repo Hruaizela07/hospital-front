@@ -374,35 +374,120 @@ export default function Landing() {
               </div>
             </div>
           </section>
-          <section
-            className="
-              relative flex h-screen w-full flex-col items-center justify-center
-              gap-10 bg-[#FBE6C2]
-            "
-
+          <div className="
+            relative inset-0 z-2 flex size-full flex-col bg-[#FBE6C2]
+          "
           >
 
-            <div>
-              arrow down
-            </div>
-
-            <div
-              className="flex size-full items-center justify-center"
-              style={{ backgroundImage: 'url(\'/Artificial-Green-Wall.png\')', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', borderRadius: '20px', objectFit: 'cover' }}
+            <section
+              className="
+                relative mt-40 flex h-lvh w-full items-center gap-10
+                bg-[#FBE6C2]
+              "
             >
-
               <div
-                onClick={() => navigate('/appointment')}
-                className="p-7"
+                className="
+                  mx-auto flex size-full max-w-410 flex-col items-center
+                  rounded-3xl border-8 border-[#15370D]
+                "
+                style={{ backgroundImage: 'url(\'/public/unsplash.jpg\')', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', borderRadius: '30px', objectFit: 'cover' }}
               >
-                CLick
-              </div>
-              <div className="border" onClick={() => navigate('/gsap')}>
-                Gsap
-              </div>
-            </div>
 
-          </section>
+                <h2 className="pt-60 pb-20 font-surfer text-5xl font-bold">MAKE AN APPOINTMENT </h2>
+                <div className="
+                  mx-auto flex w-full max-w-4xl flex-col items-center
+                  justify-center rounded-xl border-8 border-[#15370D]
+                  bg-[#5D9253] px-10 py-20
+                "
+                >
+                  <h3 className="
+                    mb-4 text-center text-3xl font-bold text-[#15370D]
+                  "
+                  >
+                    Your care starts here
+                  </h3>
+                  <p className="
+                    JetBrainsMono max-w-xl px-6 text-center text-white
+                  "
+                  >
+                    Ready to take the next step in your care? Book an appointment
+                    with our team at a time that works for you.
+                  </p>
+                  <div
+                    className="mt-10 flex justify-center"
+                  >
+
+                    <button
+                      onClick={() => navigate('/appointment')}
+                      className="
+                        rounded-2xl border-2 border-[#15370D] bg-[#15370D] px-7
+                        py-2 text-xl font-bold text-white
+                        hover:cursor-pointer hover:bg-green-600
+                      "
+                    >
+                      Book Appointment
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </section>
+            <section className="
+              relative z-4 grid grid-cols-3 bg-[#FBE6C2] px-10 py-20
+            "
+            >
+              <div className="col-span-1 font-bold text-[#15370D]">
+                <div>Home</div>
+                <div>About</div>
+                <div>Appointment</div>
+                <div>Contact</div>
+                <div className="border" onClick={() => navigate('/gsap')}>
+                  Gsap
+                </div>
+                <div
+                  className="hover:cursor-pointer"
+                  onClick={() => navigate('/login')}
+                >
+                  Login
+                </div>
+              </div>
+              <div className="
+                col-span-1 flex flex-col items-center justify-center
+              "
+              >
+                <div
+
+                  className="
+                    z-3 flex flex-col items-center font-surfer text-4xl
+                    font-bold text-[#15370D]
+                  "
+                >
+                  <p>CHOA Arthur</p>
+                  <p>M. Blank Hospital</p>
+                </div>
+                <div
+
+                  className="
+                    z-3 size-32
+                    lg:size-42
+                  "
+                >
+                  <img src="/logo2.png" alt="logo" className="size-full" />
+                </div>
+              </div>
+              <div className="col-span-1 flex w-full justify-end text-[#15370D]">
+                <div className="max-w-xs text-right">
+                  <h2 className="font-surfer text-2xl font-bold">
+                    Here for your care
+                  </h2>
+                  <p className="JetBrainsMono mt-4 text-sm/6 text-[#15370D]">
+                    Take the next step with our team. Explore the site or book an
+                    appointment when you are ready.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </ReactLenis>

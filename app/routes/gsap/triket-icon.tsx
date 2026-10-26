@@ -57,7 +57,7 @@ export default function TriketIcon() {
 
     media.add('(prefers-reduced-motion: reduce)', () => {
       gsap.set(bulbs, { opacity: 1 })
-      gsap.set(glows, { opacity: 0.65 })
+      gsap.set(glows, { opacity: 1.65 })
     })
 
     return () => media.revert()
@@ -86,7 +86,7 @@ export default function TriketIcon() {
         >
           <path d={frontWirePath} fill="none" stroke="#728E6D" strokeWidth="5" strokeLinecap="round" />
           <path d={frontWirePath} fill="none" stroke="#52724c" strokeWidth="2" strokeLinecap="round" />
-          {lights.map(light => (
+          {lights.filter(light => !light.pointsUp).map(light => (
             <g key={light.x} transform={`translate(${light.x} ${light.y}) rotate(${light.pointsUp ? 180 : 0})`}>
               <circle
                 data-christmas-glow

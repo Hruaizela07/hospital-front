@@ -111,7 +111,7 @@ export default function Appointment() {
 
   return (
     <main className="
-      min-h-screen bg-muted/30 px-4 py-10
+      min-h-screen bg-[#F9F0E0] px-4 py-10
       sm:px-6
     "
     >
